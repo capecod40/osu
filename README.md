@@ -1,3 +1,3 @@
 # osu!
 
-osu! with OpenGL
+osu! with OpenGL 4.3
