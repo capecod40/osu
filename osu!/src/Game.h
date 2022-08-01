@@ -73,7 +73,7 @@ struct TextureScoreData : public CircleData
 	float alpha;
 };
 
-struct StraightSliderData : public CircleData
+struct SliderData : public CircleData
 {
 	glm::vec3 endPos;
 	bool reverse;
@@ -91,10 +91,10 @@ struct BasicCircle : public Entity
 	TextureCircleData* textureCircleData;
 };
 
-struct StraightSlider : public Entity
+struct Slider : public Entity
 {
 	BasicCircle* basicCircle;
-	StraightSliderData* straightSliderData;
+	SliderData* sliderData;
 };
 
 class BeatMap;
@@ -108,8 +108,10 @@ private:
 
 	std::deque<Entity*> entity_buffer;
 	std::deque<TextureScoreData*> score_entity_buffer;
-
+	
+	const float CIRCLE_INNER_RADIUS;
 	const float CIRCLE_RADIUS;
+	const float CIRCLE_OUTER_RADIUS;
 	const int CIRCLE_RESOLUTION;
 	const glm::vec4 COLOR_BACKGROUND;
 	const glm::vec4 COLOR_SHRINK_CIRCLE;
@@ -126,7 +128,7 @@ private:
 
 	TextureScoreData* CreateTextureScoreData(const glm::vec3 center, SCORE score);
 
-	StraightSliderData* CreateStraightSliderData(const glm::vec3 startPos, const glm::vec3 endPos, const bool repeat = false);
+	SliderData* CreateSliderData(const glm::vec3 startPos, const glm::vec3 endPos, const bool repeat = false);
 
 
 	void GenCircleData(std::vector<float>& points,
@@ -145,7 +147,7 @@ private:
 		const glm::vec3 center,
 		const float width = 20.0f,
 		const float height = 30.0f);
-	void GenStraightSliderData(std::vector<float>& points,
+	void GenSliderData(std::vector<float>& points,
 		std::vector<unsigned int>& indices,
 		const glm::vec3 startPos,
 		const glm::vec3 endPos, 
@@ -161,7 +163,9 @@ private:
 	void TextureScoreDraw(TextureScoreData* score);
 
 public:
-	Game(const float circleRadius = 60.0f, 
+	Game(const float circleInnerRadius = 20.0f,
+		const float circleRadius = 60.0f,
+		const float circleOuterRadius = 70.0f,
 		const int circleResolution = 72, 
 		glm::vec4 color_background = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), 
 		glm::vec4 color_shrink_circle = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
@@ -170,6 +174,9 @@ public:
 		const float circle_init_size = 2.5f, 
 		const float circle_shrink_speed = 0.01f);
 	~Game();
+
+	void SliderDraw(Slider* slider);
+
 
 	void Draw();
 	

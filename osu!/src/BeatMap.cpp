@@ -3,7 +3,7 @@
 BeatMap::BeatMap(Game* game, const double bpm, const int beatsPerBar)
 	:game(game), BPM(bpm), BEATS_PER_BAR(beatsPerBar), entity_tracker(0)
 {
-	game->sound_engine->play2D("res/audio/believer.ogg");
+	//game->sound_engine->play2D("res/audio/believer.ogg");
 
 	// delay to match audio
 	glfwSetTime(0);

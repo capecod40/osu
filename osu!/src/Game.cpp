@@ -3,7 +3,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-Game::Game(const float circleRadius /*= 50.0f*/, 
+Game::Game(const float circleInnerRadius /*= 20.0f*/,
+	const float circleRadius /*= 60.0f*/,
+	const float circleOuterRadius /*= 70.0f*/,
 	const int circleResolution /*= 72*/,
 	glm::vec4 color_background /*= glm::vec4(0.0f, 0.0f, 0.0f, 0.0f)*/,
 	glm::vec4 color_shrink_circle /*= glm::vec4(0.8f, 0.5f, 1.0f, 1.0f)*/,
@@ -11,7 +13,9 @@ Game::Game(const float circleRadius /*= 50.0f*/,
 	glm::vec4 color_center /*= glm::vec4(0.2f, 0.2f, 0.2f, 1.0f)*/,
 	const float circle_init_size /*= 4.5f*/,
 	const float circle_shrink_speed /*= 0.01f*/)
-	:CIRCLE_RADIUS(circleRadius), 
+	: CIRCLE_INNER_RADIUS(circleInnerRadius),
+	CIRCLE_RADIUS(circleRadius), 
+	CIRCLE_OUTER_RADIUS(circleOuterRadius),
 	CIRCLE_RESOLUTION(circleResolution), 
 	orthoMatrix(glm::mat4(1.0f)),
 	COLOR_BACKGROUND(color_background), 
@@ -56,9 +60,9 @@ ShrinkCircleData* Game::CreateShrinkCircleData(const glm::vec3 center)
 	GenCircleData(shrinkCircle->points, 
 		shrinkCircle->indices, 
 		shrinkCircle->center,
-		CIRCLE_RADIUS - 6.0f, 
+		CIRCLE_RADIUS - 6.0f, // hard coded values
 		CIRCLE_RADIUS, 
-		CIRCLE_RADIUS + 3.0f, 
+		CIRCLE_RADIUS + 3.0f, // hard coded values
 		CIRCLE_RESOLUTION,
 		COLOR_BACKGROUND, 
 		COLOR_SHRINK_CIRCLE, 
@@ -115,9 +119,9 @@ StaticCircleData* Game::CreateStaticCircleData(const glm::vec3 center)
 	GenCircleData(staticCircle->points, 
 		staticCircle->indices, 
 		staticCircle->center,
-		CIRCLE_RADIUS - 40.0f, 
+		CIRCLE_INNER_RADIUS, 
 		CIRCLE_RADIUS, 
-		CIRCLE_RADIUS + 10.0f, 
+		CIRCLE_OUTER_RADIUS, 
 		CIRCLE_RESOLUTION,
 		COLOR_BACKGROUND, 
 		COLOR_STATIC_CIRCLE, 
@@ -294,28 +298,49 @@ TextureScoreData* Game::CreateTextureScoreData(const glm::vec3 center, SCORE sco
 	return textureScore;
 }
 
-StraightSliderData* Game::CreateStraightSliderData(const glm::vec3 startPos, const glm::vec3 endPos, const bool repeat)
+SliderData* Game::CreateSliderData(const glm::vec3 startPos, const glm::vec3 endPos, const bool repeat)
 {
-	StraightSliderData* straightSliderData = new StraightSliderData;
-	glCreateVertexArrays(1, &straightSliderData->vao);
-	glBindVertexArray(straightSliderData->vao);
+	SliderData* sliderData = new SliderData;
+	glCreateVertexArrays(1, &sliderData->vao);
+	glBindVertexArray(sliderData->vao);
 
-	glGenBuffers(1, &straightSliderData->vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, straightSliderData->vbo);
+	glGenBuffers(1, &sliderData->vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, sliderData->vbo);
 
-	// gen data
-	// data attrib
+	GenSliderData(sliderData->points,
+		sliderData->indices,
+		startPos,
+		endPos,
+		CIRCLE_INNER_RADIUS,
+		CIRCLE_RADIUS,
+		CIRCLE_OUTER_RADIUS,
+		CIRCLE_RESOLUTION,
+		COLOR_BACKGROUND,
+		COLOR_STATIC_CIRCLE,
+		COLOR_CENTER);
 
-	// ebo
+	glBufferData(GL_ARRAY_BUFFER, sliderData->points.size() * sizeof(float), &sliderData->points[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
 
-	// shader
-	// uniform
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	glGenBuffers(1, &sliderData->ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sliderData->ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sliderData->indices.size() * sizeof(unsigned int), &sliderData->indices[0], GL_STATIC_DRAW);
+
+	sliderData->shader = Shader("src/shaders/staticVertex.shader", "src/shaders/staticFragment.shader");
+	sliderData->shader.useProgram();
+
+	int uniformLocation = glGetUniformLocation(sliderData->shader.getProgramID(), "orthoMatrix");
+	glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(orthoMatrix));
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
-	return straightSliderData;
+	return sliderData;
 }
 
 void Game::Draw()
@@ -324,6 +349,10 @@ void Game::Draw()
 	{
 		if (entity_buffer[i]->type == ENTITY_TYPE::BASIC)
 			BasicCircleDraw((BasicCircle*)entity_buffer[i]);
+		else if (entity_buffer[i]->type == ENTITY_TYPE::SLIDER)
+		{
+			// SliderDraw();
+		}
 		else
 		{
 			std::cout << "Unknown Entity" << std::endl;
@@ -401,6 +430,22 @@ void Game::TextureScoreDraw(TextureScoreData* score)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void Game::SliderDraw(Slider* slider)
+{
+	if (slider->basicCircle == nullptr)
+	{
+		std::cout << "Slider basic circle was deleted!" << std::endl;
+		__debugbreak();
+	}
+	else
+		BasicCircleDraw(slider->basicCircle);
+
+	glBindVertexArray(slider->sliderData->vao);
+	slider->sliderData->shader.useProgram();
+	glDrawElements(GL_TRIANGLES, slider->sliderData->indices.size(), GL_UNSIGNED_INT, (void*)0);
+
 }
 
 void Game::OnEvent(int key, int action, double x, double y)
@@ -630,7 +675,7 @@ void Game::GenTextureData(std::vector<float>& points,
 	indices.push_back(1);
 }
 
-void Game::GenStraightSliderData(std::vector<float>& points, 
+void Game::GenSliderData(std::vector<float>& points, 
 	std::vector<unsigned int>& indices, 
 	const glm::vec3 startPos, 
 	const glm::vec3 endPos, 

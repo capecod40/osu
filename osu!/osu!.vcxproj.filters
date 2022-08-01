@@ -67,8 +67,6 @@
     <None Include="src\shaders\staticFragment.shader" />
     <None Include="src\shaders\textureFragment.shader" />
     <None Include="src\shaders\textureVertex.shader" />
-    <None Include="src\shaders\basicFragment.shader" />
-    <None Include="src\shaders\basicVertex.shader" />
     <None Include="src\shaders\textureScoreFragment.shader" />
     <None Include="src\shaders\textureScoreVertex.shader" />
   </ItemGroup>
