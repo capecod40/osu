@@ -86,7 +86,7 @@ GL_DEBUG_CALLBACK
 
 int main()
 {
-	int x = 0;
+	int x;
 	if (glfwInit() == GLFW_FALSE)
 		std::cout << "GLFW init failed!" << std::endl;
 
