@@ -15,7 +15,14 @@ private:
 
 	int entity_tracker;
 
-	void AddEntity(const int bar, const float beat, ENTITY_TYPE type, glm::vec3 center, int index, int tracker);
+	void AddEntity(int tracker, 
+		const int bar, 
+		const float beat, 
+		ENTITY_TYPE type, 
+		glm::vec3 startPos, 
+		int index = 0, 
+		glm::vec3 endPos = glm::vec3(0.0f), 
+		bool repeat = false);
 
 	void CurrentBeat(int& bar, double& beat) const;
 

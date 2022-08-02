@@ -36,7 +36,7 @@ Game::~Game()
 	sound_engine->drop();
 }
 
-void Game::CreateBasicCircle(const glm::vec3 center, const int index)
+BasicCircle* Game::CreateBasicCircle(const glm::vec3 center, const int index)
 {
 	BasicCircle* basic = new BasicCircle;
 	basic->shrinkCircleData = CreateShrinkCircleData(center);
@@ -44,6 +44,7 @@ void Game::CreateBasicCircle(const glm::vec3 center, const int index)
 	basic->textureCircleData = CreateTextureCircleData(center, index);
 	basic->type = ENTITY_TYPE::BASIC;
 	entity_buffer.push_back(basic);
+	return basic; // needed for basic circle in slider
 }
 
 
@@ -298,6 +299,16 @@ TextureScoreData* Game::CreateTextureScoreData(const glm::vec3 center, SCORE sco
 	return textureScore;
 }
 
+Slider* Game::CreateSlider(const glm::vec3 startPos, const glm::vec3 endPos, const int index, const bool repeat)
+{
+	Slider* slider = new Slider;
+	slider->basicCircle = CreateBasicCircle(startPos, index); // pushes BasicCircle to buffer
+	slider->sliderData = CreateSliderData(startPos, endPos, repeat);
+	slider->type = ENTITY_TYPE::SLIDER;
+	entity_buffer.push_back(slider);
+	return slider; // not needed, kept for consistency with CreateBasicCircle
+}
+
 SliderData* Game::CreateSliderData(const glm::vec3 startPos, const glm::vec3 endPos, const bool repeat)
 {
 	SliderData* sliderData = new SliderData;
@@ -351,7 +362,7 @@ void Game::Draw()
 			BasicCircleDraw((BasicCircle*)entity_buffer[i]);
 		else if (entity_buffer[i]->type == ENTITY_TYPE::SLIDER)
 		{
-			// SliderDraw();
+			SliderDraw((Slider*)entity_buffer[i]);
 		}
 		else
 		{
@@ -434,18 +445,9 @@ void Game::TextureScoreDraw(TextureScoreData* score)
 
 void Game::SliderDraw(Slider* slider)
 {
-	if (slider->basicCircle == nullptr)
-	{
-		std::cout << "Slider basic circle was deleted!" << std::endl;
-		__debugbreak();
-	}
-	else
-		BasicCircleDraw(slider->basicCircle);
-
 	glBindVertexArray(slider->sliderData->vao);
 	slider->sliderData->shader.useProgram();
 	glDrawElements(GL_TRIANGLES, slider->sliderData->indices.size(), GL_UNSIGNED_INT, (void*)0);
-
 }
 
 void Game::OnEvent(int key, int action, double x, double y)
@@ -700,7 +702,7 @@ void Game::GenSliderData(std::vector<float>& points,
 	}
 
 	// test
-	// add second half circle, make i global
+	// add slider
 
 	points.push_back(startPos.x);
 	points.push_back(startPos.y);
@@ -710,11 +712,12 @@ void Game::GenSliderData(std::vector<float>& points,
 	points.push_back(circleCenterColor.z);
 	points.push_back(circleCenterColor.w);
 
+	
 	for (int i = 0; i < resolution; i++)
 	{
 		// inner points
-		float x = innerRadius * cos(i * M_PI / resolution + angle) + startPos.x;
-		float y = innerRadius * sin(i * M_PI / resolution + angle) + startPos.y;
+		float x = innerRadius * cos(i * M_PI / resolution + angle + M_PI / 2.0) + startPos.x;
+		float y = innerRadius * sin(i * M_PI / resolution + angle + M_PI / 2.0) + startPos.y;
 		points.push_back(x);
 		points.push_back(y);
 		points.push_back(0.0f); // z coordinate
@@ -724,8 +727,8 @@ void Game::GenSliderData(std::vector<float>& points,
 		points.push_back(backgroundColor.w);
 
 		// middle points
-		x = innerRadius * cos(i * M_PI / resolution + angle) + startPos.x;
-		y = innerRadius * sin(i * M_PI / resolution + angle) + startPos.y;
+		x = middleRadius * cos(i * M_PI / resolution + angle + M_PI / 2.0) + startPos.x;
+		y = middleRadius * sin(i * M_PI / resolution + angle + M_PI / 2.0) + startPos.y;
 		points.push_back(x);
 		points.push_back(y);
 		points.push_back(0.0f); // z coordinate
@@ -735,8 +738,8 @@ void Game::GenSliderData(std::vector<float>& points,
 		points.push_back(circleColor.w);
 
 		// outer points
-		x = innerRadius * cos(i * M_PI / resolution + angle) + startPos.x;
-		y = innerRadius * sin(i * M_PI / resolution + angle) + startPos.y;
+		x = outerRadius * cos(i * M_PI / resolution + angle + M_PI / 2.0) + startPos.x;
+		y = outerRadius * sin(i * M_PI / resolution + angle + M_PI / 2.0) + startPos.y;
 		points.push_back(x);
 		points.push_back(y);
 		points.push_back(0.0f); // z coordinate
@@ -774,8 +777,8 @@ void Game::GenSliderData(std::vector<float>& points,
 		{
 			i++;
 			// inner points
-			float x = innerRadius * cos(i * M_PI / resolution + angle) + startPos.x;
-			float y = innerRadius * sin(i * M_PI / resolution + angle) + startPos.y;
+			float x = innerRadius * cos(i * M_PI / resolution + angle + M_PI / 2.0) + startPos.x;
+			float y = innerRadius * sin(i * M_PI / resolution + angle + M_PI / 2.0) + startPos.y;
 			points.push_back(x);
 			points.push_back(y);
 			points.push_back(0.0f); // z coordinate
@@ -785,8 +788,8 @@ void Game::GenSliderData(std::vector<float>& points,
 			points.push_back(backgroundColor.w);
 
 			// middle points
-			x = innerRadius * cos(i * M_PI / resolution + angle) + startPos.x;
-			y = innerRadius * sin(i * M_PI / resolution + angle) + startPos.y;
+			x = middleRadius * cos(i * M_PI / resolution + angle + M_PI / 2.0) + startPos.x;
+			y = middleRadius * sin(i * M_PI / resolution + angle + M_PI / 2.0) + startPos.y;
 			points.push_back(x);
 			points.push_back(y);
 			points.push_back(0.0f); // z coordinate
@@ -796,8 +799,8 @@ void Game::GenSliderData(std::vector<float>& points,
 			points.push_back(circleColor.w);
 
 			// outer points
-			x = innerRadius * cos(i * M_PI / resolution + angle) + startPos.x;
-			y = innerRadius * sin(i * M_PI / resolution + angle) + startPos.y;
+			x = outerRadius * cos(i * M_PI / resolution + angle + M_PI / 2.0) + startPos.x;
+			y = outerRadius * sin(i * M_PI / resolution + angle + M_PI / 2.0) + startPos.y;
 			points.push_back(x);
 			points.push_back(y);
 			points.push_back(0.0f); // z coordinate
@@ -807,6 +810,323 @@ void Game::GenSliderData(std::vector<float>& points,
 			points.push_back(backgroundColor.w);
 		}
 	}
+
+	// second circle
+	if (points.size() % 7 != 0) { // should always be divisible by 7
+		std::cout << "Generate points size error!" << std::endl;
+		__debugbreak();
+	}
+
+	int secondCircleStartIndex = points.size() / 7;
+
+	points.push_back(endPos.x);
+	points.push_back(endPos.y);
+	points.push_back(endPos.z);
+	points.push_back(circleCenterColor.x);
+	points.push_back(circleCenterColor.y);
+	points.push_back(circleCenterColor.z);
+	points.push_back(circleCenterColor.w);
+
+	for (int i = 0; i < resolution; i++)
+	{
+		// inner points
+		float x = innerRadius * cos(i * M_PI / resolution + angle - M_PI / 2.0) + endPos.x;
+		float y = innerRadius * sin(i * M_PI / resolution + angle - M_PI / 2.0) + endPos.y;
+		points.push_back(x);
+		points.push_back(y);
+		points.push_back(0.0f); // z coordinate
+		points.push_back(backgroundColor.x);
+		points.push_back(backgroundColor.y);
+		points.push_back(backgroundColor.z);
+		points.push_back(backgroundColor.w);
+
+		// middle points
+		x = middleRadius * cos(i * M_PI / resolution + angle - M_PI / 2.0) + endPos.x;
+		y = middleRadius * sin(i * M_PI / resolution + angle - M_PI / 2.0) + endPos.y;
+		points.push_back(x);
+		points.push_back(y);
+		points.push_back(0.0f); // z coordinate
+		points.push_back(circleColor.x);
+		points.push_back(circleColor.y);
+		points.push_back(circleColor.z);
+		points.push_back(circleColor.w);
+
+		// outer points
+		x = outerRadius * cos(i * M_PI / resolution + angle - M_PI / 2.0) + endPos.x;
+		y = outerRadius * sin(i * M_PI / resolution + angle - M_PI / 2.0) + endPos.y;
+		points.push_back(x);
+		points.push_back(y);
+		points.push_back(0.0f); // z coordinate
+		points.push_back(backgroundColor.x);
+		points.push_back(backgroundColor.y);
+		points.push_back(backgroundColor.z);
+		points.push_back(backgroundColor.w);
+
+		// center triangle (0 1 4)
+		indices.push_back(secondCircleStartIndex);
+		indices.push_back(secondCircleStartIndex + i * 3 + 1);
+		indices.push_back(secondCircleStartIndex + i * 3 + 4);
+
+		// inner triangle 1 (1 2 4)		
+		indices.push_back(secondCircleStartIndex + i * 3 + 1);
+		indices.push_back(secondCircleStartIndex + i * 3 + 2);
+		indices.push_back(secondCircleStartIndex + i * 3 + 4);
+
+		// inner triangle 2 (2 4 5)
+		indices.push_back(secondCircleStartIndex + i * 3 + 2);
+		indices.push_back(secondCircleStartIndex + i * 3 + 4);
+		indices.push_back(secondCircleStartIndex + i * 3 + 5);
+
+		// outer triangle 1 (2 3 5)
+		indices.push_back(secondCircleStartIndex + i * 3 + 2);
+		indices.push_back(secondCircleStartIndex + i * 3 + 3);
+		indices.push_back(secondCircleStartIndex + i * 3 + 5);
+
+		// outer triangle 2 (3 5 6)
+		indices.push_back(secondCircleStartIndex + i * 3 + 3);
+		indices.push_back(secondCircleStartIndex + i * 3 + 5);
+		indices.push_back(secondCircleStartIndex + i * 3 + 6);
+
+		if (i == resolution - 1)
+		{
+			i++;
+			// inner points
+			float x = innerRadius * cos(i * M_PI / resolution + angle - M_PI / 2.0) + endPos.x;
+			float y = innerRadius * sin(i * M_PI / resolution + angle - M_PI / 2.0) + endPos.y;
+			points.push_back(x);
+			points.push_back(y);
+			points.push_back(0.0f); // z coordinate
+			points.push_back(backgroundColor.x);
+			points.push_back(backgroundColor.y);
+			points.push_back(backgroundColor.z);
+			points.push_back(backgroundColor.w);
+
+			// middle points
+			x = middleRadius * cos(i * M_PI / resolution + angle - M_PI / 2.0) + endPos.x;
+			y = middleRadius * sin(i * M_PI / resolution + angle - M_PI / 2.0) + endPos.y;
+			points.push_back(x);
+			points.push_back(y);
+			points.push_back(0.0f); // z coordinate
+			points.push_back(circleColor.x);
+			points.push_back(circleColor.y);
+			points.push_back(circleColor.z);
+			points.push_back(circleColor.w);
+
+			// outer points
+			x = outerRadius * cos(i * M_PI / resolution + angle - M_PI / 2.0) + endPos.x;
+			y = outerRadius * sin(i * M_PI / resolution + angle - M_PI / 2.0) + endPos.y;
+			points.push_back(x);
+			points.push_back(y);
+			points.push_back(0.0f); // z coordinate
+			points.push_back(backgroundColor.x);
+			points.push_back(backgroundColor.y);
+			points.push_back(backgroundColor.z);
+			points.push_back(backgroundColor.w);
+		}
+	}
+
+	// slider pipe
+	if (points.size() % 7 != 0) { // should always be divisible by 7
+		std::cout << "Generate points size error!" << std::endl;
+		__debugbreak();
+	}
+
+	int sliderPipeStartIndex = points.size() / 7;
+
+	// 0
+	points.push_back(startPos.x);
+	points.push_back(startPos.y);
+	points.push_back(startPos.z);
+	points.push_back(circleCenterColor.x);
+	points.push_back(circleCenterColor.y);
+	points.push_back(circleCenterColor.z);
+	points.push_back(circleCenterColor.w);
+
+
+	// 1 2 3
+	x = innerRadius * cos(angle + M_PI / 2.0) + startPos.x;
+	y = innerRadius * sin(angle + M_PI / 2.0) + startPos.y;
+	points.push_back(x);
+	points.push_back(y);
+	points.push_back(0.0f);
+	points.push_back(backgroundColor.x);
+	points.push_back(backgroundColor.y);
+	points.push_back(backgroundColor.z);
+	points.push_back(backgroundColor.w);
+
+	x = middleRadius * cos(angle + M_PI / 2.0) + startPos.x;
+	y = middleRadius * sin(angle + M_PI / 2.0) + startPos.y;
+	points.push_back(x);
+	points.push_back(y);
+	points.push_back(0.0f);
+	points.push_back(circleColor.x);
+	points.push_back(circleColor.y);
+	points.push_back(circleColor.z);
+	points.push_back(circleColor.w);
+
+	x = outerRadius * cos(angle + M_PI / 2.0) + startPos.x;
+	y = outerRadius * sin(angle + M_PI / 2.0) + startPos.y;
+	points.push_back(x);
+	points.push_back(y);
+	points.push_back(0.0f);
+	points.push_back(backgroundColor.x);
+	points.push_back(backgroundColor.y);
+	points.push_back(backgroundColor.z);
+	points.push_back(backgroundColor.w);
+
+
+	// 4 5 6
+	x = innerRadius * cos(angle - M_PI / 2.0) + startPos.x;
+	y = innerRadius * sin(angle - M_PI / 2.0) + startPos.y;
+	points.push_back(x);
+	points.push_back(y);
+	points.push_back(0.0f);
+	points.push_back(backgroundColor.x);
+	points.push_back(backgroundColor.y);
+	points.push_back(backgroundColor.z);
+	points.push_back(backgroundColor.w);
+
+	x = middleRadius * cos(angle - M_PI / 2.0) + startPos.x;
+	y = middleRadius * sin(angle - M_PI / 2.0) + startPos.y;
+	points.push_back(x);
+	points.push_back(y);
+	points.push_back(0.0f);
+	points.push_back(circleColor.x);
+	points.push_back(circleColor.y);
+	points.push_back(circleColor.z);
+	points.push_back(circleColor.w);
+
+	x = outerRadius * cos(angle - M_PI / 2.0) + startPos.x;
+	y = outerRadius * sin(angle - M_PI / 2.0) + startPos.y;
+	points.push_back(x);
+	points.push_back(y);
+	points.push_back(0.0f);
+	points.push_back(backgroundColor.x);
+	points.push_back(backgroundColor.y);
+	points.push_back(backgroundColor.z);
+	points.push_back(backgroundColor.w);
+
+	// 7
+	points.push_back(endPos.x);
+	points.push_back(endPos.y);
+	points.push_back(endPos.z);
+	points.push_back(circleCenterColor.x);
+	points.push_back(circleCenterColor.y);
+	points.push_back(circleCenterColor.z);
+	points.push_back(circleCenterColor.w);
+
+	// 8 9 10
+	x = innerRadius * cos(angle + M_PI / 2.0) + endPos.x;
+	y = innerRadius * sin(angle + M_PI / 2.0) + endPos.y;
+	points.push_back(x);
+	points.push_back(y);
+	points.push_back(0.0f);
+	points.push_back(backgroundColor.x);
+	points.push_back(backgroundColor.y);
+	points.push_back(backgroundColor.z);
+	points.push_back(backgroundColor.w);
+
+	x = middleRadius * cos(angle + M_PI / 2.0) + endPos.x;
+	y = middleRadius * sin(angle + M_PI / 2.0) + endPos.y;
+	points.push_back(x);
+	points.push_back(y);
+	points.push_back(0.0f);
+	points.push_back(circleColor.x);
+	points.push_back(circleColor.y);
+	points.push_back(circleColor.z);
+	points.push_back(circleColor.w);
+
+	x = outerRadius * cos(angle + M_PI / 2.0) + endPos.x;
+	y = outerRadius * sin(angle + M_PI / 2.0) + endPos.y;
+	points.push_back(x);
+	points.push_back(y);
+	points.push_back(0.0f);
+	points.push_back(backgroundColor.x);
+	points.push_back(backgroundColor.y);
+	points.push_back(backgroundColor.z);
+	points.push_back(backgroundColor.w);
+
+	// 11 12 13
+	x = innerRadius * cos(angle - M_PI / 2.0) + endPos.x;
+	y = innerRadius * sin(angle - M_PI / 2.0) + endPos.y;
+	points.push_back(x);
+	points.push_back(y);
+	points.push_back(0.0f);
+	points.push_back(backgroundColor.x);
+	points.push_back(backgroundColor.y);
+	points.push_back(backgroundColor.z);
+	points.push_back(backgroundColor.w);
+
+	x = middleRadius * cos(angle - M_PI / 2.0) + endPos.x;
+	y = middleRadius * sin(angle - M_PI / 2.0) + endPos.y;
+	points.push_back(x);
+	points.push_back(y);
+	points.push_back(0.0f);
+	points.push_back(circleColor.x);
+	points.push_back(circleColor.y);
+	points.push_back(circleColor.z);
+	points.push_back(circleColor.w);
+
+	x = outerRadius * cos(angle - M_PI / 2.0) + endPos.x;
+	y = outerRadius * sin(angle - M_PI / 2.0) + endPos.y;
+	points.push_back(x);
+	points.push_back(y);
+	points.push_back(0.0f);
+	points.push_back(backgroundColor.x);
+	points.push_back(backgroundColor.y);
+	points.push_back(backgroundColor.z);
+	points.push_back(backgroundColor.w);
+
+	// "top" side
+	indices.push_back(sliderPipeStartIndex);
+	indices.push_back(sliderPipeStartIndex + 1);
+	indices.push_back(sliderPipeStartIndex + 7);
+
+	indices.push_back(sliderPipeStartIndex + 8);
+	indices.push_back(sliderPipeStartIndex + 1);
+	indices.push_back(sliderPipeStartIndex + 7);
+
+	indices.push_back(sliderPipeStartIndex + 1);
+	indices.push_back(sliderPipeStartIndex + 8);
+	indices.push_back(sliderPipeStartIndex + 2);
+
+	indices.push_back(sliderPipeStartIndex + 2);
+	indices.push_back(sliderPipeStartIndex + 9);
+	indices.push_back(sliderPipeStartIndex + 8);
+
+	indices.push_back(sliderPipeStartIndex + 2);
+	indices.push_back(sliderPipeStartIndex + 3);
+	indices.push_back(sliderPipeStartIndex + 9);
+
+	indices.push_back(sliderPipeStartIndex + 3);
+	indices.push_back(sliderPipeStartIndex + 10);
+	indices.push_back(sliderPipeStartIndex + 9);
+
+	// "bottom" side
+	indices.push_back(sliderPipeStartIndex);
+	indices.push_back(sliderPipeStartIndex + 4);
+	indices.push_back(sliderPipeStartIndex + 11);
+
+	indices.push_back(sliderPipeStartIndex);
+	indices.push_back(sliderPipeStartIndex + 7);
+	indices.push_back(sliderPipeStartIndex + 11);
+
+	indices.push_back(sliderPipeStartIndex + 4);
+	indices.push_back(sliderPipeStartIndex + 5);
+	indices.push_back(sliderPipeStartIndex + 12);
+
+	indices.push_back(sliderPipeStartIndex + 4);
+	indices.push_back(sliderPipeStartIndex + 11);
+	indices.push_back(sliderPipeStartIndex + 12);
+
+	indices.push_back(sliderPipeStartIndex + 5);
+	indices.push_back(sliderPipeStartIndex + 6);
+	indices.push_back(sliderPipeStartIndex + 13);
+
+	indices.push_back(sliderPipeStartIndex + 5);
+	indices.push_back(sliderPipeStartIndex + 12);
+	indices.push_back(sliderPipeStartIndex + 13);
+
 }
 
 void Game::KeyboardInput(GLFWwindow* window, int key, int scancode, int action, int mods)

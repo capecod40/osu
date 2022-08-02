@@ -121,14 +121,15 @@ private:
 	const float CIRCLE_SHRINK_SPEED;
 	glm::mat4 orthoMatrix;
 
-	void CreateBasicCircle(const glm::vec3 center, const int index);
+	BasicCircle* CreateBasicCircle(const glm::vec3 center, const int index);
 	ShrinkCircleData* CreateShrinkCircleData(const glm::vec3 center);
 	StaticCircleData* CreateStaticCircleData(const glm::vec3 center);
 	TextureCircleData* CreateTextureCircleData(const glm::vec3 center, const int index);
 
 	TextureScoreData* CreateTextureScoreData(const glm::vec3 center, SCORE score);
 
-	SliderData* CreateSliderData(const glm::vec3 startPos, const glm::vec3 endPos, const bool repeat = false);
+	Slider* CreateSlider(const glm::vec3 startPos, const glm::vec3 endPos, const int index, const bool repeat);
+	SliderData* CreateSliderData(const glm::vec3 startPos, const glm::vec3 endPos, const bool repeat);
 
 
 	void GenCircleData(std::vector<float>& points,
