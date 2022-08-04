@@ -69,5 +69,7 @@
     <None Include="src\shaders\textureVertex.shader" />
     <None Include="src\shaders\textureScoreFragment.shader" />
     <None Include="src\shaders\textureScoreVertex.shader" />
+    <None Include="src\shaders\slidingBaseFragment.shader" />
+    <None Include="src\shaders\slidingBaseVertex.shader" />
   </ItemGroup>
 </Project>

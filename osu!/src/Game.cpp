@@ -299,17 +299,18 @@ TextureScoreData* Game::CreateTextureScoreData(const glm::vec3 center, SCORE sco
 	return textureScore;
 }
 
-Slider* Game::CreateSlider(const glm::vec3 startPos, const glm::vec3 endPos, const int index, const bool repeat)
+Slider* Game::CreateSlider(const glm::vec3 startPos, const glm::vec3 endPos, const int index, const int repeat)
 {
 	Slider* slider = new Slider;
 	slider->basicCircle = CreateBasicCircle(startPos, index); // pushes BasicCircle to buffer
 	slider->sliderData = CreateSliderData(startPos, endPos, repeat);
+	slider->slidingCircleData = CreateSlidingCircleData(startPos, endPos, repeat);
 	slider->type = ENTITY_TYPE::SLIDER;
 	entity_buffer.push_back(slider);
 	return slider; // not needed, kept for consistency with CreateBasicCircle
 }
 
-SliderData* Game::CreateSliderData(const glm::vec3 startPos, const glm::vec3 endPos, const bool repeat)
+SliderData* Game::CreateSliderData(const glm::vec3 startPos, const glm::vec3 endPos, const int repeat)
 {
 	SliderData* sliderData = new SliderData;
 	glCreateVertexArrays(1, &sliderData->vao);
@@ -318,6 +319,9 @@ SliderData* Game::CreateSliderData(const glm::vec3 startPos, const glm::vec3 end
 	glGenBuffers(1, &sliderData->vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, sliderData->vbo);
 
+	sliderData->center = startPos;
+	sliderData->endPos = endPos;
+	sliderData->repeat = repeat;
 	GenSliderData(sliderData->points,
 		sliderData->indices,
 		startPos,
@@ -352,6 +356,57 @@ SliderData* Game::CreateSliderData(const glm::vec3 startPos, const glm::vec3 end
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	return sliderData;
+}
+
+SlidingCircleData* Game::CreateSlidingCircleData(const glm::vec3 startPos, const glm::vec3 endPos, const int repeat)
+{
+	SlidingCircleData* slidingCircleData = new SlidingCircleData;
+	glCreateVertexArrays(1, &slidingCircleData->vao);
+	glBindVertexArray(slidingCircleData->vao);
+
+	glGenBuffers(1, &slidingCircleData->vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, slidingCircleData->vbo);
+
+	slidingCircleData->center = startPos;
+	GenCircleData(slidingCircleData->points,
+		slidingCircleData->indices,
+		slidingCircleData->center,
+		CIRCLE_INNER_RADIUS,
+		CIRCLE_RADIUS,
+		CIRCLE_OUTER_RADIUS,
+		CIRCLE_RESOLUTION,
+		COLOR_BACKGROUND,
+		COLOR_STATIC_CIRCLE,
+		COLOR_CENTER);
+
+	ASSERT(glBufferData(GL_ARRAY_BUFFER, slidingCircleData->points.size() * sizeof(float), &(slidingCircleData->points[0]), GL_STATIC_DRAW));
+
+	ASSERT(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0));
+	ASSERT(glEnableVertexAttribArray(0));
+
+	ASSERT(glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float))));
+	ASSERT(glEnableVertexAttribArray(1));
+
+	ASSERT(glGenBuffers(1, &(slidingCircleData->ebo)));
+	ASSERT(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, slidingCircleData->ebo));
+	ASSERT(glBufferData(GL_ELEMENT_ARRAY_BUFFER, slidingCircleData->indices.size() * sizeof(unsigned int), &(slidingCircleData->indices[0]), GL_STATIC_DRAW));
+
+	slidingCircleData->shader = Shader("src/shaders/staticVertex.shader", "src/shaders/staticFragment.shader");
+	slidingCircleData->shader.useProgram();
+
+	int uniformLocation = glGetUniformLocation(slidingCircleData->shader.getProgramID(), "orthoMatrix");
+	glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(orthoMatrix));
+
+	slidingCircleData->translationMatrix = glm::translate(glm::vec3(0.0f, 0.0f, 0.0f));
+	slidingCircleData->translationMatrixLoc = glGetUniformLocation(slidingCircleData->shader.getProgramID(), "translationMatrix");
+	glUniformMatrix4fv(slidingCircleData->translationMatrixLoc, 1, GL_FALSE, glm::value_ptr(slidingCircleData->translationMatrix));
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+
+	return slidingCircleData;
 }
 
 void Game::Draw()
@@ -445,9 +500,27 @@ void Game::TextureScoreDraw(TextureScoreData* score)
 
 void Game::SliderDraw(Slider* slider)
 {
+	// draw base slider outline
 	glBindVertexArray(slider->sliderData->vao);
 	slider->sliderData->shader.useProgram();
 	glDrawElements(GL_TRIANGLES, slider->sliderData->indices.size(), GL_UNSIGNED_INT, (void*)0);
+
+	// draw moving base circle
+
+	// formula for moving circle
+
+	// if translation hasn't reached the end and repeatCounter has not exceeded repeat
+	// move
+	// repeatCounter++
+
+	glBindVertexArray(slider->slidingCircleData->vao);
+	slider->slidingCircleData->shader.useProgram();
+	glDrawElements(GL_TRIANGLES, slider->slidingCircleData->indices.size(), GL_UNSIGNED_INT, (void*)0);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void Game::OnEvent(int key, int action, double x, double y)

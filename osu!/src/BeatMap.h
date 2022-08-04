@@ -22,7 +22,7 @@ private:
 		glm::vec3 startPos, 
 		int index = 0, 
 		glm::vec3 endPos = glm::vec3(0.0f), 
-		bool repeat = false);
+		int repeat = 0);
 
 	void CurrentBeat(int& bar, double& beat) const;
 

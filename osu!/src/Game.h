@@ -73,10 +73,19 @@ struct TextureScoreData : public CircleData
 	float alpha;
 };
 
+struct SlidingCircleData : public CircleData
+{
+	SlidingCircleData() : translationMatrix(glm::mat4(1.0f)), translationX(0.0f), translationY(0.0f), repeatCounter(0), CircleData() {};
+	int translationMatrixLoc;
+	glm::mat4 translationMatrix;
+	float translationX, translationY;
+	int repeatCounter;
+};
+
 struct SliderData : public CircleData
 {
 	glm::vec3 endPos;
-	bool reverse;
+	int repeat;
 };
 
 struct Entity
@@ -95,6 +104,7 @@ struct Slider : public Entity
 {
 	BasicCircle* basicCircle;
 	SliderData* sliderData;
+	SlidingCircleData* slidingCircleData;
 };
 
 class BeatMap;
@@ -128,8 +138,9 @@ private:
 
 	TextureScoreData* CreateTextureScoreData(const glm::vec3 center, SCORE score);
 
-	Slider* CreateSlider(const glm::vec3 startPos, const glm::vec3 endPos, const int index, const bool repeat);
-	SliderData* CreateSliderData(const glm::vec3 startPos, const glm::vec3 endPos, const bool repeat);
+	Slider* CreateSlider(const glm::vec3 startPos, const glm::vec3 endPos, const int index, const int repeat);
+	SliderData* CreateSliderData(const glm::vec3 startPos, const glm::vec3 endPos, const int repeat);
+	SlidingCircleData* CreateSlidingCircleData(const glm::vec3 startPos, const glm::vec3 endPos, const int repeat);
 
 
 	void GenCircleData(std::vector<float>& points,
