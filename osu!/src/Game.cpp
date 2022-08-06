@@ -12,7 +12,8 @@ Game::Game(const float circleInnerRadius /*= 20.0f*/,
 	glm::vec4 color_static_circle /*= glm::vec4(0.8f, 0.5f, 1.0f, 1.0f)*/,
 	glm::vec4 color_center /*= glm::vec4(0.2f, 0.2f, 0.2f, 1.0f)*/,
 	const float circle_init_size /*= 4.5f*/,
-	const float circle_shrink_speed /*= 0.01f*/)
+	const float circle_shrink_speed /*= 0.01f*/, 
+	const float slider_speed /*= 1.0f*/)
 	: CIRCLE_INNER_RADIUS(circleInnerRadius),
 	CIRCLE_RADIUS(circleRadius), 
 	CIRCLE_OUTER_RADIUS(circleOuterRadius),
@@ -23,7 +24,8 @@ Game::Game(const float circleInnerRadius /*= 20.0f*/,
 	COLOR_STATIC_CIRCLE(color_static_circle),
 	COLOR_CENTER(color_center), 
 	CIRCLE_INIT_SIZE(circle_init_size), 
-	CIRCLE_SHRINK_SPEED(circle_shrink_speed)
+	CIRCLE_SHRINK_SPEED(circle_shrink_speed), 
+	SLIDER_SPEED(slider_speed)
 
 {
 	sound_engine = irrklang::createIrrKlangDevice();
@@ -151,6 +153,7 @@ StaticCircleData* Game::CreateStaticCircleData(const glm::vec3 center)
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glUseProgram(0);
 	return staticCircle;
 }
 
@@ -224,6 +227,7 @@ TextureCircleData* Game::CreateTextureCircleData(const glm::vec3 center, const i
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
+	glUseProgram(0);
 	return textureCircle;
 }
 
@@ -296,6 +300,7 @@ TextureScoreData* Game::CreateTextureScoreData(const glm::vec3 center, SCORE sco
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
+	glUseProgram(0);
 	return textureScore;
 }
 
@@ -322,6 +327,12 @@ SliderData* Game::CreateSliderData(const glm::vec3 startPos, const glm::vec3 end
 	sliderData->center = startPos;
 	sliderData->endPos = endPos;
 	sliderData->repeat = repeat;
+	sliderData->slope = (endPos.y - startPos.y) / (endPos.x - startPos.x);
+	if (sliderData->slope > 1.0f || sliderData->slope < -1.0f)
+		sliderData->useYAxis = true;
+	else
+		sliderData->useYAxis = false;
+
 	GenSliderData(sliderData->points,
 		sliderData->indices,
 		startPos,
@@ -355,6 +366,7 @@ SliderData* Game::CreateSliderData(const glm::vec3 startPos, const glm::vec3 end
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
+	glUseProgram(0);
 	return sliderData;
 }
 
@@ -391,20 +403,20 @@ SlidingCircleData* Game::CreateSlidingCircleData(const glm::vec3 startPos, const
 	ASSERT(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, slidingCircleData->ebo));
 	ASSERT(glBufferData(GL_ELEMENT_ARRAY_BUFFER, slidingCircleData->indices.size() * sizeof(unsigned int), &(slidingCircleData->indices[0]), GL_STATIC_DRAW));
 
-	slidingCircleData->shader = Shader("src/shaders/staticVertex.shader", "src/shaders/staticFragment.shader");
+	slidingCircleData->shader = Shader("src/shaders/slidingBaseVertex.shader", "src/shaders/slidingBaseFragment.shader");
 	slidingCircleData->shader.useProgram();
 
 	int uniformLocation = glGetUniformLocation(slidingCircleData->shader.getProgramID(), "orthoMatrix");
 	glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(orthoMatrix));
 
-	slidingCircleData->translationMatrix = glm::translate(glm::vec3(0.0f, 0.0f, 0.0f));
+	slidingCircleData->translationMatrix = glm::translate(glm::vec3(50.0f, 0.0f, 0.0f));
 	slidingCircleData->translationMatrixLoc = glGetUniformLocation(slidingCircleData->shader.getProgramID(), "translationMatrix");
 	glUniformMatrix4fv(slidingCircleData->translationMatrixLoc, 1, GL_FALSE, glm::value_ptr(slidingCircleData->translationMatrix));
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
+	glUseProgram(0);
 
 	return slidingCircleData;
 }
@@ -472,6 +484,7 @@ void Game::BasicCircleDraw(BasicCircle* circle)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
+	glUseProgram(0);
 }
 
 void Game::TextureScoreDraw(TextureScoreData* score)
@@ -496,6 +509,8 @@ void Game::TextureScoreDraw(TextureScoreData* score)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
+	glUseProgram(0);
+
 }
 
 void Game::SliderDraw(Slider* slider)
@@ -506,21 +521,79 @@ void Game::SliderDraw(Slider* slider)
 	glDrawElements(GL_TRIANGLES, slider->sliderData->indices.size(), GL_UNSIGNED_INT, (void*)0);
 
 	// draw moving base circle
+	if (entity_buffer[0]->type == ENTITY_TYPE::SLIDER) // after the inital circle is finished
+	{
+		glBindVertexArray(slider->slidingCircleData->vao);
+		slider->slidingCircleData->shader.useProgram();
+		glDrawElements(GL_TRIANGLES, slider->slidingCircleData->indices.size(), GL_UNSIGNED_INT, (void*)0);
 
-	// formula for moving circle
+		if (slider->slidingCircleData->repeatCounter <= slider->sliderData->repeat)
+		{
+			bool endIsLeftOfStart = slider->sliderData->endPos.x < slider->sliderData->center.x;
+			bool endIsUnderStart = slider->sliderData->endPos.y < slider->sliderData->center.y;
 
-	// if translation hasn't reached the end and repeatCounter has not exceeded repeat
-	// move
-	// repeatCounter++
+			float x, y;
 
-	glBindVertexArray(slider->slidingCircleData->vao);
-	slider->slidingCircleData->shader.useProgram();
-	glDrawElements(GL_TRIANGLES, slider->slidingCircleData->indices.size(), GL_UNSIGNED_INT, (void*)0);
+			if (slider->sliderData->useYAxis) // use y axis if slope is too large to slow down slider
+			{
+				if (!endIsUnderStart)
+				{
+					if (slider->slidingCircleData->repeatCounter % 2 == 0)
+						slider->slidingCircleData->translateYPos += SLIDER_SPEED;
+					else
+						slider->slidingCircleData->translateYPos -= SLIDER_SPEED;
+				}
+				else // reverse above
+				{
+					if (slider->slidingCircleData->repeatCounter % 2 == 0)
+						slider->slidingCircleData->translateYPos -= SLIDER_SPEED;
+					else
+						slider->slidingCircleData->translateYPos += SLIDER_SPEED;
+				}
+				y = slider->slidingCircleData->translateYPos;
+				x = slider->slidingCircleData->translateXPos = slider->slidingCircleData->translateYPos / slider->sliderData->slope;
+			}
+			else
+			{
+				if (endIsLeftOfStart)
+				{
+					if (slider->slidingCircleData->repeatCounter % 2 == 0)
+						slider->slidingCircleData->translateXPos -= SLIDER_SPEED;
+					else
+						slider->slidingCircleData->translateXPos += SLIDER_SPEED;
+				}
+				else // reverse above
+				{
+					if (slider->slidingCircleData->repeatCounter % 2 == 0)
+						slider->slidingCircleData->translateXPos += SLIDER_SPEED;
+					else
+						slider->slidingCircleData->translateXPos -= SLIDER_SPEED;
+				}
+				y = slider->sliderData->slope * slider->slidingCircleData->translateXPos;
+				x = slider->slidingCircleData->translateXPos;
+			}
+
+			slider->slidingCircleData->translationMatrix = glm::translate(glm::vec3(x, y, 0.0f));
+
+			glUniformMatrix4fv(slider->slidingCircleData->translationMatrixLoc, 1, GL_FALSE, glm::value_ptr(slider->slidingCircleData->translationMatrix));
+
+			if (!endIsLeftOfStart && (x + slider->sliderData->center.x > slider->sliderData->endPos.x || x + slider->sliderData->center.x < slider->sliderData->center.x))
+				slider->slidingCircleData->repeatCounter++;
+			else if (endIsLeftOfStart && (x + slider->sliderData->center.x < slider->sliderData->endPos.x || x + slider->sliderData->center.x > slider->sliderData->center.x))
+				slider->slidingCircleData->repeatCounter++;
+
+		}
+	}
+
+
+
+
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
+	glUseProgram(0);
 }
 
 void Game::OnEvent(int key, int action, double x, double y)
@@ -765,18 +838,16 @@ void Game::GenSliderData(std::vector<float>& points,
 	// slider angle from +x axis for half circles
 	bool endIsLeftOfStart = endPos.x < startPos.x;
 
-	double x = abs(startPos.x - endPos.x);
-	double y = abs(startPos.y - endPos.y);
+	double x = endPos.x - startPos.x;
+	double y = endPos.y - startPos.y;
 	double angle = atan(y / x);
 
 	if (endIsLeftOfStart)
 	{
-		angle = M_PI - angle;
+		angle += M_PI;
 	}
 
-	// test
 	// add slider
-
 	points.push_back(startPos.x);
 	points.push_back(startPos.y);
 	points.push_back(startPos.z);

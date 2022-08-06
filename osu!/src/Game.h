@@ -75,10 +75,10 @@ struct TextureScoreData : public CircleData
 
 struct SlidingCircleData : public CircleData
 {
-	SlidingCircleData() : translationMatrix(glm::mat4(1.0f)), translationX(0.0f), translationY(0.0f), repeatCounter(0), CircleData() {};
+	SlidingCircleData() : translationMatrix(glm::mat4(1.0f)), translateXPos(0.0f), translateYPos(0.0f), repeatCounter(0), CircleData() {};
 	int translationMatrixLoc;
 	glm::mat4 translationMatrix;
-	float translationX, translationY;
+	float translateXPos, translateYPos;
 	int repeatCounter;
 };
 
@@ -86,6 +86,8 @@ struct SliderData : public CircleData
 {
 	glm::vec3 endPos;
 	int repeat;
+	double slope;
+	bool useYAxis;
 };
 
 struct Entity
@@ -129,6 +131,7 @@ private:
 	const glm::vec4 COLOR_CENTER;
 	const float CIRCLE_INIT_SIZE;
 	const float CIRCLE_SHRINK_SPEED;
+	const float SLIDER_SPEED;
 	glm::mat4 orthoMatrix;
 
 	BasicCircle* CreateBasicCircle(const glm::vec3 center, const int index);
@@ -184,7 +187,8 @@ public:
 		glm::vec4 color_static_circle = glm::vec4(0.8f, 0.5f, 1.0f, 1.0f),
 		glm::vec4 color_center = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f), 
 		const float circle_init_size = 2.5f, 
-		const float circle_shrink_speed = 0.01f);
+		const float circle_shrink_speed = 0.01f, 
+		const float slider_speed = 6.0f);
 	~Game();
 
 	void SliderDraw(Slider* slider);

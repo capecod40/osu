@@ -10,6 +10,6 @@ uniform mat4 translationMatrix;
 
 void main() {
 
-	gl_Position = translationMatrix * orthoMatrix* vec4(trianglePos, 1.0f);
+	gl_Position = orthoMatrix * translationMatrix * vec4(trianglePos, 1.0f);
 	color = colorCoords;
 }
