@@ -75,11 +75,19 @@ struct TextureScoreData : public CircleData
 
 struct SlidingCircleData : public CircleData
 {
-	SlidingCircleData() : translationMatrix(glm::mat4(1.0f)), translateXPos(0.0f), translateYPos(0.0f), repeatCounter(0), CircleData() {};
+	SlidingCircleData() : translationMatrix(glm::mat4(1.0f)), translateXPos(0.0f), translateYPos(0.0f), repeatCounter(0) {};
 	int translationMatrixLoc;
 	glm::mat4 translationMatrix;
 	float translateXPos, translateYPos;
 	int repeatCounter;
+};
+
+struct ClickSlidingCirleData : public SlidingCircleData
+{
+	ClickSlidingCirleData() : scaleMatrix(glm::mat4(1.0f)), scaleFactor(1.0f) {};
+	int scaleMatrixLoc;
+	glm::mat4 scaleMatrix;
+	float scaleFactor;
 };
 
 struct SliderData : public CircleData
@@ -107,6 +115,8 @@ struct Slider : public Entity
 	BasicCircle* basicCircle;
 	SliderData* sliderData;
 	SlidingCircleData* slidingCircleData;
+	ClickSlidingCirleData* clickSlidingCircleData;
+	SCORE score;
 };
 
 class BeatMap;
@@ -134,6 +144,8 @@ private:
 	const float SLIDER_SPEED;
 	glm::mat4 orthoMatrix;
 
+	bool keyHold;
+
 	BasicCircle* CreateBasicCircle(const glm::vec3 center, const int index);
 	ShrinkCircleData* CreateShrinkCircleData(const glm::vec3 center);
 	StaticCircleData* CreateStaticCircleData(const glm::vec3 center);
@@ -144,7 +156,7 @@ private:
 	Slider* CreateSlider(const glm::vec3 startPos, const glm::vec3 endPos, const int index, const int repeat);
 	SliderData* CreateSliderData(const glm::vec3 startPos, const glm::vec3 endPos, const int repeat);
 	SlidingCircleData* CreateSlidingCircleData(const glm::vec3 startPos, const glm::vec3 endPos, const int repeat);
-
+	ClickSlidingCirleData* CreateClickSlidingCircleData(const glm::vec3 startPos, const glm::vec3 endPos, const int repeat);
 
 	void GenCircleData(std::vector<float>& points,
 		std::vector<unsigned int>& indices,
@@ -177,6 +189,9 @@ private:
 	void BasicCircleDraw(BasicCircle* circle);
 	void TextureScoreDraw(TextureScoreData* score);
 
+	void OnEventBasicCircle(BasicCircle*& basicCircle, int key, int action, double x, double y);
+	void OnEventSlider(Slider*& slider, int key, int action, double x, double y);
+
 public:
 	Game(const float circleInnerRadius = 20.0f,
 		const float circleRadius = 60.0f,
@@ -188,7 +203,8 @@ public:
 		glm::vec4 color_center = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f), 
 		const float circle_init_size = 2.5f, 
 		const float circle_shrink_speed = 0.01f, 
-		const float slider_speed = 6.0f);
+		const float slider_speed = 6.0f, 
+		const bool hold = false);
 	~Game();
 
 	void SliderDraw(Slider* slider);

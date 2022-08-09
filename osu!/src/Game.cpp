@@ -13,11 +13,12 @@ Game::Game(const float circleInnerRadius /*= 20.0f*/,
 	glm::vec4 color_center /*= glm::vec4(0.2f, 0.2f, 0.2f, 1.0f)*/,
 	const float circle_init_size /*= 4.5f*/,
 	const float circle_shrink_speed /*= 0.01f*/, 
-	const float slider_speed /*= 1.0f*/)
+	const float slider_speed /*= 1.0f*/, 
+	const bool hold /*= false*/)
 	: CIRCLE_INNER_RADIUS(circleInnerRadius),
 	CIRCLE_RADIUS(circleRadius), 
 	CIRCLE_OUTER_RADIUS(circleOuterRadius),
-	CIRCLE_RESOLUTION(circleResolution), 
+	CIRCLE_RESOLUTION(circleResolution),
 	orthoMatrix(glm::mat4(1.0f)),
 	COLOR_BACKGROUND(color_background), 
 	COLOR_SHRINK_CIRCLE(color_shrink_circle), 
@@ -25,8 +26,8 @@ Game::Game(const float circleInnerRadius /*= 20.0f*/,
 	COLOR_CENTER(color_center), 
 	CIRCLE_INIT_SIZE(circle_init_size), 
 	CIRCLE_SHRINK_SPEED(circle_shrink_speed), 
-	SLIDER_SPEED(slider_speed)
-
+	SLIDER_SPEED(slider_speed), 
+	keyHold(hold)
 {
 	sound_engine = irrklang::createIrrKlangDevice();
 	stbi_set_flip_vertically_on_load(true);
@@ -310,6 +311,7 @@ Slider* Game::CreateSlider(const glm::vec3 startPos, const glm::vec3 endPos, con
 	slider->basicCircle = CreateBasicCircle(startPos, index); // pushes BasicCircle to buffer
 	slider->sliderData = CreateSliderData(startPos, endPos, repeat);
 	slider->slidingCircleData = CreateSlidingCircleData(startPos, endPos, repeat);
+	slider->clickSlidingCircleData = CreateClickSlidingCircleData(startPos, endPos, repeat);
 	slider->type = ENTITY_TYPE::SLIDER;
 	entity_buffer.push_back(slider);
 	return slider; // not needed, kept for consistency with CreateBasicCircle
@@ -421,6 +423,70 @@ SlidingCircleData* Game::CreateSlidingCircleData(const glm::vec3 startPos, const
 	return slidingCircleData;
 }
 
+ClickSlidingCirleData* Game::CreateClickSlidingCircleData(const glm::vec3 startPos, const glm::vec3 endPos, const int repeat)
+{
+	ClickSlidingCirleData* clickSlidingCircleData = new ClickSlidingCirleData;
+
+	glCreateVertexArrays(1, &clickSlidingCircleData->vao);
+	glBindVertexArray(clickSlidingCircleData->vao);
+
+	glGenBuffers(1, &clickSlidingCircleData->vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, clickSlidingCircleData->vbo);
+
+	clickSlidingCircleData->center = startPos;
+	GenCircleData(clickSlidingCircleData->points,
+		clickSlidingCircleData->indices,
+		clickSlidingCircleData->center,
+		CIRCLE_INNER_RADIUS,
+		CIRCLE_RADIUS,
+		CIRCLE_OUTER_RADIUS,
+		CIRCLE_RESOLUTION,
+		COLOR_BACKGROUND,
+		COLOR_STATIC_CIRCLE,
+		COLOR_CENTER);
+
+	ASSERT(glBufferData(GL_ARRAY_BUFFER, clickSlidingCircleData->points.size() * sizeof(float), &(clickSlidingCircleData->points[0]), GL_STATIC_DRAW));
+
+	ASSERT(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0));
+	ASSERT(glEnableVertexAttribArray(0));
+
+	ASSERT(glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float))));
+	ASSERT(glEnableVertexAttribArray(1));
+
+	ASSERT(glGenBuffers(1, &(clickSlidingCircleData->ebo)));
+	ASSERT(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, clickSlidingCircleData->ebo));
+	ASSERT(glBufferData(GL_ELEMENT_ARRAY_BUFFER, clickSlidingCircleData->indices.size() * sizeof(unsigned int), &(clickSlidingCircleData->indices[0]), GL_STATIC_DRAW));
+
+	clickSlidingCircleData->shader = Shader("src/shaders/slidingBaseVertex.shader", "src/shaders/slidingBaseFragment.shader");
+	clickSlidingCircleData->shader.useProgram();
+
+	int uniformLocation = glGetUniformLocation(clickSlidingCircleData->shader.getProgramID(), "orthoMatrix");
+	glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(orthoMatrix));
+
+	uniformLocation = glGetUniformLocation(clickSlidingCircleData->shader.getProgramID(), "toOrigin");
+	glm::mat4 toOrigin = glm::translate(glm::vec3(-1.0f) * clickSlidingCircleData->center);
+	glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(toOrigin));
+
+	uniformLocation = glGetUniformLocation(clickSlidingCircleData->shader.getProgramID(), "fromOrigin");
+	glm::mat4 fromOrigin = glm::translate(clickSlidingCircleData->center);
+	glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(fromOrigin));
+
+	clickSlidingCircleData->scaleMatrixLoc = glGetUniformLocation(clickSlidingCircleData->shader.getProgramID(), "scaleMatrix");
+	glm::mat4 scaleMatrix = glm::scale(glm::vec3(1.0f));
+	glUniformMatrix4fv(clickSlidingCircleData->scaleMatrixLoc, 1, GL_FALSE, glm::value_ptr(scaleMatrix));
+
+	clickSlidingCircleData->translationMatrix = glm::translate(glm::vec3(50.0f, 0.0f, 0.0f));
+	clickSlidingCircleData->translationMatrixLoc = glGetUniformLocation(clickSlidingCircleData->shader.getProgramID(), "translationMatrix");
+	glUniformMatrix4fv(clickSlidingCircleData->translationMatrixLoc, 1, GL_FALSE, glm::value_ptr(clickSlidingCircleData->translationMatrix));
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glUseProgram(0);
+
+	return clickSlidingCircleData;
+}
+
 void Game::Draw()
 {
 	for (int i = entity_buffer.size() - 1; i >= 0; i--)
@@ -513,6 +579,135 @@ void Game::TextureScoreDraw(TextureScoreData* score)
 
 }
 
+void Game::OnEventBasicCircle(BasicCircle*& basicCircle, int key, int action, double x, double y)
+{
+
+	if (action == GLFW_RELEASE)
+		return;
+
+	BasicCircle* circle = (BasicCircle*)entity_buffer[0];
+
+	bool in_range = x >= circle->shrinkCircleData->center.x - 400.0f && x <= circle->shrinkCircleData->center.x + 400.0f &&
+		y >= circle->shrinkCircleData->center.y - 400.0f && y <= circle->shrinkCircleData->center.y + 400.0f;
+
+	bool in_circle = y <= sqrt(CIRCLE_RADIUS * CIRCLE_RADIUS - pow(x - circle->shrinkCircleData->center.x, 2)) + circle->shrinkCircleData->center.y &&
+		y >= circle->shrinkCircleData->center.y - sqrt(CIRCLE_RADIUS * CIRCLE_RADIUS - pow(x - circle->shrinkCircleData->center.x, 2));
+
+
+	if (entity_buffer[1]->type == ENTITY_TYPE::SLIDER) // for slider initial circles: sends score data to slider instead of drawing score texture
+	{
+		if (x == -1) // circle expires
+		{
+			((Slider*)entity_buffer[1])->score = SCORE::FAIL;
+		}
+		else if (!in_range) // if out of bounds, ignore input
+			return;
+		else if (!in_circle) 
+		{
+			((Slider*)entity_buffer[1])->score = SCORE::FAIL;
+		}
+		else if (circle->shrinkCircleData->shrinkFactor < 1.2f && circle->shrinkCircleData->shrinkFactor > 1.0f)
+		{
+			// success
+		}
+
+		else if (circle->shrinkCircleData->shrinkFactor < 1.4f && circle->shrinkCircleData->shrinkFactor > 1.2f)
+		{
+			((Slider*)entity_buffer[1])->score = SCORE::HUNDRED;
+		}
+		else if (circle->shrinkCircleData->shrinkFactor < 1.0f && circle->shrinkCircleData->shrinkFactor > 0.8f)
+		{
+			((Slider*)entity_buffer[1])->score = SCORE::HUNDRED;
+		}
+
+		else if (circle->shrinkCircleData->shrinkFactor < 1.6 && circle->shrinkCircleData->shrinkFactor > 1.4f)
+		{
+			((Slider*)entity_buffer[1])->score = SCORE::FIFTY;
+		}
+		else if (circle->shrinkCircleData->shrinkFactor < 0.8f && circle->shrinkCircleData->shrinkFactor > 0.6f)
+		{
+			((Slider*)entity_buffer[1])->score = SCORE::FIFTY;
+		}
+
+		else
+		{
+			((Slider*)entity_buffer[1])->score = SCORE::FAIL;
+		}
+		delete circle->shrinkCircleData;
+		delete circle->staticCircleData;
+		delete circle->textureCircleData;
+		delete entity_buffer[0];
+		entity_buffer.pop_front();
+	}
+	else // normal circle
+	{
+		if (x == -1) // circle expires
+		{
+			score_entity_buffer.push_back(CreateTextureScoreData(circle->shrinkCircleData->center, SCORE::FAIL));
+		}
+		else if (!in_range) // if out of bounds, ignore input
+			return;
+		else if (!in_circle) // for follow, scores in circles aren't necessary. Push entity score buffer
+		{
+			score_entity_buffer.push_back(CreateTextureScoreData(circle->shrinkCircleData->center, SCORE::FAIL));
+		}
+		else if (circle->shrinkCircleData->shrinkFactor < 1.2f && circle->shrinkCircleData->shrinkFactor > 1.0f)
+		{
+			// success
+		}
+
+		else if (circle->shrinkCircleData->shrinkFactor < 1.4f && circle->shrinkCircleData->shrinkFactor > 1.2f)
+		{
+			score_entity_buffer.push_back(CreateTextureScoreData(circle->shrinkCircleData->center, SCORE::HUNDRED));
+		}
+		else if (circle->shrinkCircleData->shrinkFactor < 1.0f && circle->shrinkCircleData->shrinkFactor > 0.8f)
+		{
+			score_entity_buffer.push_back(CreateTextureScoreData(circle->shrinkCircleData->center, SCORE::HUNDRED));
+		}
+
+		else if (circle->shrinkCircleData->shrinkFactor < 1.6 && circle->shrinkCircleData->shrinkFactor > 1.4f)
+		{
+			score_entity_buffer.push_back(CreateTextureScoreData(circle->shrinkCircleData->center, SCORE::FIFTY));
+		}
+		else if (circle->shrinkCircleData->shrinkFactor < 0.8f && circle->shrinkCircleData->shrinkFactor > 0.6f)
+		{
+			score_entity_buffer.push_back(CreateTextureScoreData(circle->shrinkCircleData->center, SCORE::FIFTY));
+		}
+
+		else
+		{
+			score_entity_buffer.push_back(CreateTextureScoreData(circle->shrinkCircleData->center, SCORE::FAIL));
+		}
+		delete circle->shrinkCircleData;
+		delete circle->staticCircleData;
+		delete circle->textureCircleData;
+		delete entity_buffer[0];
+		entity_buffer.pop_front();
+	}
+}
+
+void Game::OnEventSlider(Slider*& slider, int key, int action, double x, double y)
+{
+	if (slider->slidingCircleData->repeatCounter > slider->sliderData->repeat)
+	{
+		delete slider->basicCircle;
+		delete slider->sliderData;
+		delete slider->slidingCircleData;
+		delete slider->clickSlidingCircleData;
+		delete entity_buffer[0];
+		entity_buffer.pop_front();
+		return;
+	}
+
+	if (!keyHold)
+	{
+		if (slider->clickSlidingCircleData->scaleFactor > 1.0f)
+			slider->clickSlidingCircleData->scaleFactor -= CIRCLE_SHRINK_SPEED;
+
+	}
+
+}
+
 void Game::SliderDraw(Slider* slider)
 {
 	// draw base slider outline
@@ -523,6 +718,7 @@ void Game::SliderDraw(Slider* slider)
 	// draw moving base circle
 	if (entity_buffer[0]->type == ENTITY_TYPE::SLIDER) // after the inital circle is finished
 	{
+		// base circle draw
 		glBindVertexArray(slider->slidingCircleData->vao);
 		slider->slidingCircleData->shader.useProgram();
 		glDrawElements(GL_TRIANGLES, slider->slidingCircleData->indices.size(), GL_UNSIGNED_INT, (void*)0);
@@ -583,11 +779,70 @@ void Game::SliderDraw(Slider* slider)
 				slider->slidingCircleData->repeatCounter++;
 
 		}
+
+
+		// click circle draw
+		glBindVertexArray(slider->clickSlidingCircleData->vao);
+		slider->clickSlidingCircleData->shader.useProgram();
+		glDrawElements(GL_TRIANGLES, slider->clickSlidingCircleData->indices.size(), GL_UNSIGNED_INT, (void*)0);
+
+		if (slider->clickSlidingCircleData->repeatCounter <= slider->sliderData->repeat)
+		{
+			bool endIsLeftOfStart = slider->sliderData->endPos.x < slider->sliderData->center.x;
+			bool endIsUnderStart = slider->sliderData->endPos.y < slider->sliderData->center.y;
+
+			float x, y;
+
+			if (slider->sliderData->useYAxis) // use y axis if slope is too large to slow down slider
+			{
+				if (!endIsUnderStart)
+				{
+					if (slider->clickSlidingCircleData->repeatCounter % 2 == 0)
+						slider->clickSlidingCircleData->translateYPos += SLIDER_SPEED;
+					else
+						slider->clickSlidingCircleData->translateYPos -= SLIDER_SPEED;
+				}
+				else // reverse above
+				{
+					if (slider->clickSlidingCircleData->repeatCounter % 2 == 0)
+						slider->clickSlidingCircleData->translateYPos -= SLIDER_SPEED;
+					else
+						slider->clickSlidingCircleData->translateYPos += SLIDER_SPEED;
+				}
+				y = slider->clickSlidingCircleData->translateYPos;
+				x = slider->clickSlidingCircleData->translateXPos = slider->clickSlidingCircleData->translateYPos / slider->sliderData->slope;
+			}
+			else
+			{
+				if (endIsLeftOfStart)
+				{
+					if (slider->clickSlidingCircleData->repeatCounter % 2 == 0)
+						slider->clickSlidingCircleData->translateXPos -= SLIDER_SPEED;
+					else
+						slider->clickSlidingCircleData->translateXPos += SLIDER_SPEED;
+				}
+				else // reverse above
+				{
+					if (slider->clickSlidingCircleData->repeatCounter % 2 == 0)
+						slider->clickSlidingCircleData->translateXPos += SLIDER_SPEED;
+					else
+						slider->clickSlidingCircleData->translateXPos -= SLIDER_SPEED;
+				}
+				y = slider->sliderData->slope * slider->clickSlidingCircleData->translateXPos;
+				x = slider->clickSlidingCircleData->translateXPos;
+			}
+
+			slider->clickSlidingCircleData->translationMatrix = glm::translate(glm::vec3(x, y, 0.0f));
+
+			glUniformMatrix4fv(slider->clickSlidingCircleData->translationMatrixLoc, 1, GL_FALSE, glm::value_ptr(slider->clickSlidingCircleData->translationMatrix));
+
+			if (!endIsLeftOfStart && (x + slider->sliderData->center.x > slider->sliderData->endPos.x || x + slider->sliderData->center.x < slider->sliderData->center.x))
+				slider->clickSlidingCircleData->repeatCounter++;
+			else if (endIsLeftOfStart && (x + slider->sliderData->center.x < slider->sliderData->endPos.x || x + slider->sliderData->center.x > slider->sliderData->center.x))
+				slider->clickSlidingCircleData->repeatCounter++;
+
+		}
 	}
-
-
-
-
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -604,67 +859,29 @@ void Game::OnEvent(int key, int action, double x, double y)
 	}
 	else if (key != GLFW_KEY_Z && key != GLFW_KEY_X && key != GLFW_MOUSE_BUTTON_1)
 		return;
-	else
+
+	if (action == GLFW_PRESS)
+		keyHold = true;
+	else if (action == GLFW_RELEASE)
+		keyHold = false;
+
+
+	switch (entity_buffer[0]->type)
 	{
-		switch (entity_buffer[0]->type)
+	case ENTITY_TYPE::BASIC:
 		{
-		case ENTITY_TYPE::BASIC:
-
-			if (action == GLFW_RELEASE)
-				return;
-
-			BasicCircle* circle = (BasicCircle*)entity_buffer[0];
-
-			bool in_range = x >= circle->shrinkCircleData->center.x - 400.0f && x <= circle->shrinkCircleData->center.x + 400.0f &&
-				y >= circle->shrinkCircleData->center.y - 400.0f && y <= circle->shrinkCircleData->center.y + 400.0f;
-
-			bool in_circle = y <= sqrt(CIRCLE_RADIUS * CIRCLE_RADIUS - pow(x - circle->shrinkCircleData->center.x, 2)) + circle->shrinkCircleData->center.y &&
-				y >= circle->shrinkCircleData->center.y - sqrt(CIRCLE_RADIUS * CIRCLE_RADIUS - pow(x - circle->shrinkCircleData->center.x, 2));
-
-			if (x == -1) // circle expires
-			{
-				score_entity_buffer.push_back(CreateTextureScoreData(circle->shrinkCircleData->center, SCORE::FAIL));
-			}
-			else if (!in_range) // if out of bounds, ignore input
-				return;
-			else if (!in_circle) // for follow, scores in circles aren't necessary. Push entity score buffer
-			{
-				score_entity_buffer.push_back(CreateTextureScoreData(circle->shrinkCircleData->center, SCORE::FAIL));
-			}
-			else if (circle->shrinkCircleData->shrinkFactor < 1.2f && circle->shrinkCircleData->shrinkFactor > 1.0f)
-			{
-				// success
-			}
-
-			else if (circle->shrinkCircleData->shrinkFactor < 1.4f && circle->shrinkCircleData->shrinkFactor > 1.2f)
-			{
-				score_entity_buffer.push_back(CreateTextureScoreData(circle->shrinkCircleData->center, SCORE::HUNDRED));
-			}
-			else if (circle->shrinkCircleData->shrinkFactor < 1.0f && circle->shrinkCircleData->shrinkFactor > 0.8f)
-			{
-				score_entity_buffer.push_back(CreateTextureScoreData(circle->shrinkCircleData->center, SCORE::HUNDRED));
-			}
-
-			else if (circle->shrinkCircleData->shrinkFactor < 1.6 && circle->shrinkCircleData->shrinkFactor > 1.4f)
-			{
-				score_entity_buffer.push_back(CreateTextureScoreData(circle->shrinkCircleData->center, SCORE::FIFTY));
-			}
-			else if (circle->shrinkCircleData->shrinkFactor < 0.8f && circle->shrinkCircleData->shrinkFactor > 0.6f)
-			{
-				score_entity_buffer.push_back(CreateTextureScoreData(circle->shrinkCircleData->center, SCORE::FIFTY));
-			}
-
-			else
-			{
-				score_entity_buffer.push_back(CreateTextureScoreData(circle->shrinkCircleData->center, SCORE::FAIL));
-			}
-			delete circle->shrinkCircleData;
-			delete circle->staticCircleData;
-			delete circle->textureCircleData;
-			delete entity_buffer[0];
-			entity_buffer.pop_front();
+			BasicCircle* basicCircle = (BasicCircle*)entity_buffer[0];
+			OnEventBasicCircle(basicCircle, key, action, x, y);
 			break;
 		}
+
+	case ENTITY_TYPE::SLIDER:
+		{
+			Slider* slider = (Slider*)entity_buffer[0];
+			OnEventSlider(slider, key, action, x, y);
+			break;
+		}
+
 	}
 }
 

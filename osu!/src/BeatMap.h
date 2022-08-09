@@ -20,7 +20,7 @@ private:
 		const float beat, 
 		ENTITY_TYPE type, 
 		glm::vec3 startPos, 
-		int index = 0, 
+		int index, 
 		glm::vec3 endPos = glm::vec3(0.0f), 
 		int repeat = 0);
 
