@@ -120,7 +120,7 @@ int main()
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // wire
 
-	Game* game = new Game();
+	Game* game = new Game(window);
 	BeatMap beatMap(game, 124, 4);
 
 	glfwSetWindowUserPointer(window, game); // do research: static cast

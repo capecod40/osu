@@ -28,7 +28,7 @@ enum class SCORE
 	FAIL = 0, FIFTY = 1, HUNDRED = 2, SUCCESS = 3
 };
 
-struct CircleData
+struct DataCircle
 {
 	unsigned int vao;
 	unsigned int vbo;
@@ -40,17 +40,17 @@ struct CircleData
 	glm::vec3 center;
 };
 
-struct StaticCircleData : public CircleData {};
+struct DataStaticCircle : public DataCircle {};
 
-struct TextureCircleData : public CircleData
+struct DataTextureCircle : public DataCircle
 {
 	int index;
 	unsigned int textureID;
 };
 
-struct ShrinkCircleData : public CircleData
+struct DataShrinkCircle : public DataCircle
 {
-	ShrinkCircleData(const float initSize, const float shrinkSpeed)
+	DataShrinkCircle(const float initSize, const float shrinkSpeed)
 		:shrinkFactor(initSize), shrinkSpeed(shrinkSpeed), 
 		shrinkMatrix(glm::mat4(1.0f)), toOrigin(glm::mat4(1.0f)), fromOrigin(glm::mat4(1.0f)) {}
 
@@ -62,9 +62,9 @@ struct ShrinkCircleData : public CircleData
 	glm::mat4 fromOrigin;
 };
 
-struct TextureScoreData : public CircleData
+struct DataTextureScore : public DataCircle
 {
-	TextureScoreData() : alpha(1.0f) {}
+	DataTextureScore() : alpha(1.0f) {}
 
 	SCORE score;
 	unsigned int textureID;
@@ -73,29 +73,31 @@ struct TextureScoreData : public CircleData
 	float alpha;
 };
 
-struct SlidingCircleData : public CircleData
+struct DataSlidingCircle : public DataCircle
 {
-	SlidingCircleData() : translationMatrix(glm::mat4(1.0f)), translateXPos(0.0f), translateYPos(0.0f), repeatCounter(0) {};
+	DataSlidingCircle() : translationMatrix(glm::mat4(1.0f)), translateXPos(0.0f), translateYPos(0.0f), repeatCounter(0) {};
 	int translationMatrixLoc;
 	glm::mat4 translationMatrix;
 	float translateXPos, translateYPos;
 	int repeatCounter;
 };
 
-struct ClickSlidingCirleData : public SlidingCircleData
+struct DataClickSlidingCirle : public DataSlidingCircle
 {
-	ClickSlidingCirleData() : scaleMatrix(glm::mat4(1.0f)), scaleFactor(1.0f) {};
+	DataClickSlidingCirle() : scaleMatrix(glm::mat4(1.0f)), scaleFactor(1.0f) {};
 	int scaleMatrixLoc;
 	glm::mat4 scaleMatrix;
 	float scaleFactor;
 };
 
-struct SliderData : public CircleData
+struct DataSlider : public DataCircle
 {
 	glm::vec3 endPos;
 	int repeat;
 	double slope;
 	bool useYAxis;
+	bool endIsLeftOfStart;
+	bool endIsUnderStart;
 };
 
 struct Entity
@@ -105,17 +107,17 @@ struct Entity
 
 struct BasicCircle : public Entity
 {
-	StaticCircleData* staticCircleData;
-	ShrinkCircleData* shrinkCircleData;
-	TextureCircleData* textureCircleData;
+	DataStaticCircle* dataStaticCircle;
+	DataShrinkCircle* dataShrinkCircle;
+	DataTextureCircle* dataTextureCircle;
 };
 
 struct Slider : public Entity
 {
 	BasicCircle* basicCircle;
-	SliderData* sliderData;
-	SlidingCircleData* slidingCircleData;
-	ClickSlidingCirleData* clickSlidingCircleData;
+	DataSlider* dataSlider;
+	DataSlidingCircle* dataSlidingCircle;
+	DataClickSlidingCirle* dataClickSlidingCircle;
 	SCORE score;
 };
 
@@ -126,10 +128,11 @@ class Game
 	friend BeatMap;
 private:
 
+	GLFWwindow* window;
 	irrklang::ISoundEngine* sound_engine;
 
 	std::deque<Entity*> entity_buffer;
-	std::deque<TextureScoreData*> score_entity_buffer;
+	std::deque<DataTextureScore*> score_entity_buffer;
 	
 	const float CIRCLE_INNER_RADIUS;
 	const float CIRCLE_RADIUS;
@@ -144,21 +147,21 @@ private:
 	const float SLIDER_SPEED;
 	glm::mat4 orthoMatrix;
 
-	bool keyHold;
+	int keyHold;
 
 	BasicCircle* CreateBasicCircle(const glm::vec3 center, const int index);
-	ShrinkCircleData* CreateShrinkCircleData(const glm::vec3 center);
-	StaticCircleData* CreateStaticCircleData(const glm::vec3 center);
-	TextureCircleData* CreateTextureCircleData(const glm::vec3 center, const int index);
+	DataShrinkCircle* CreateDataShrinkCircle(const glm::vec3 center);
+	DataStaticCircle* CreateDataStaticCircle(const glm::vec3 center);
+	DataTextureCircle* CreateDataTextureCircle(const glm::vec3 center, const int index);
 
-	TextureScoreData* CreateTextureScoreData(const glm::vec3 center, SCORE score);
+	DataTextureScore* CreateDataTextureScore(const glm::vec3 center, SCORE score);
 
 	Slider* CreateSlider(const glm::vec3 startPos, const glm::vec3 endPos, const int index, const int repeat);
-	SliderData* CreateSliderData(const glm::vec3 startPos, const glm::vec3 endPos, const int repeat);
-	SlidingCircleData* CreateSlidingCircleData(const glm::vec3 startPos, const glm::vec3 endPos, const int repeat);
-	ClickSlidingCirleData* CreateClickSlidingCircleData(const glm::vec3 startPos, const glm::vec3 endPos, const int repeat);
+	DataSlider* CreateDataSlider(const glm::vec3 startPos, const glm::vec3 endPos, const int repeat);
+	DataSlidingCircle* CreateDataSlidingCircle(const glm::vec3 startPos, const glm::vec3 endPos, const int repeat);
+	DataClickSlidingCirle* CreateDataClickSlidingCircle(const glm::vec3 startPos, const glm::vec3 endPos, const int repeat);
 
-	void GenCircleData(std::vector<float>& points,
+	void GenDataCircle(std::vector<float>& points,
 		std::vector<unsigned int>& indices,
 		const glm::vec3 center,
 		const float innerRadius,
@@ -169,12 +172,12 @@ private:
 		const glm::vec4 circleColor,
 		const glm::vec4 circleCenterColor);
 
-	void GenTextureData(std::vector<float>& points,
+	void GenDataTexture(std::vector<float>& points,
 		std::vector<unsigned int>& indices,
 		const glm::vec3 center,
 		const float width = 20.0f,
 		const float height = 30.0f);
-	void GenSliderData(std::vector<float>& points,
+	void GenDataSlider(std::vector<float>& points,
 		std::vector<unsigned int>& indices,
 		const glm::vec3 startPos,
 		const glm::vec3 endPos, 
@@ -186,14 +189,16 @@ private:
 		const glm::vec4 circleColor,
 		const glm::vec4 circleCenterColor);
 
-	void BasicCircleDraw(BasicCircle* circle);
-	void TextureScoreDraw(TextureScoreData* score);
+	void DrawBasicCircle(BasicCircle* circle);
+	void DrawTextureScore(DataTextureScore* score);
+	void DrawSlider(Slider* slider);
 
 	void OnEventBasicCircle(BasicCircle*& basicCircle, int key, int action, double x, double y);
 	void OnEventSlider(Slider*& slider, int key, int action, double x, double y);
 
 public:
-	Game(const float circleInnerRadius = 20.0f,
+	Game(GLFWwindow* win, 
+		const float circleInnerRadius = 20.0f,
 		const float circleRadius = 60.0f,
 		const float circleOuterRadius = 70.0f,
 		const int circleResolution = 72, 
@@ -204,10 +209,9 @@ public:
 		const float circle_init_size = 2.5f, 
 		const float circle_shrink_speed = 0.01f, 
 		const float slider_speed = 6.0f, 
-		const bool hold = false);
+		const int hold = 0);
 	~Game();
 
-	void SliderDraw(Slider* slider);
 
 
 	void Draw();

@@ -13,6 +13,6 @@ uniform mat4 fromOrigin;
 
 void main() {
 
-	gl_Position = orthoMatrix * translationMatrix* fromOrigin * scaleMatrix * toOrigin * vec4(trianglePos, 1.0f);
+	gl_Position = orthoMatrix * translationMatrix * fromOrigin * scaleMatrix * toOrigin * vec4(trianglePos, 1.0f);
 	color = colorCoords;
 }
