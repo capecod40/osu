@@ -493,6 +493,7 @@ DataClickSlidingCirle* Game::CreateDataClickSlidingCircle(const glm::vec3 startP
 
 void Game::Draw()
 {
+
 	for (int i = entity_buffer.size() - 1; i >= 0; i--)
 	{
 		if (entity_buffer[i]->type == ENTITY_TYPE::BASIC)
@@ -531,9 +532,18 @@ void Game::DrawBasicCircle(BasicCircle* circle)
 	{
 		circle->dataShrinkCircle->shrinkFactor -= circle->dataShrinkCircle->shrinkSpeed;
 	}
-	else
+	else // destroy circle
 	{
-		OnEvent(GLFW_KEY_Z, GLFW_PRESS, -1.0f, -1.0f);
+		if (entity_buffer[1]->type == ENTITY_TYPE::SLIDER)
+			((Slider*)entity_buffer[1])->score = SCORE::FAIL;
+		else
+			score_entity_buffer.push_back(CreateDataTextureScore(circle->dataShrinkCircle->center, SCORE::FAIL));
+
+		delete circle->dataShrinkCircle;
+		delete circle->dataStaticCircle;
+		delete circle->dataTextureCircle;
+		delete entity_buffer[0];
+		entity_buffer.pop_front();
 		return;
 	}
 
@@ -565,7 +575,7 @@ void Game::DrawTextureScore(DataTextureScore* score)
 
 	if (score->alpha > 0)
 	{
-		score->alpha -= 0.01f;
+		score->alpha -= CIRCLE_SHRINK_SPEED;
 		glUniform4f(score->colorUniformLoc, 1.0f, 1.0f, 1.0f, score->alpha);
 		glDrawElements(GL_TRIANGLES, score->indices.size(), GL_UNSIGNED_INT, (void*)0);
 	}
@@ -600,11 +610,13 @@ void Game::OnEventBasicCircle(BasicCircle*& basicCircle, int key, int action, do
 
 	if (entity_buffer[1]->type == ENTITY_TYPE::SLIDER) // for slider initial circles: sends score data to slider instead of drawing score texture
 	{
-		if (x == -1) // circle expires
-		{
-			((Slider*)entity_buffer[1])->score = SCORE::FAIL;
-		}
-		else if (!in_range) // if out of bounds, ignore input
+		//if (x == -1) // circle expires
+		//{
+		//	((Slider*)entity_buffer[1])->score = SCORE::FAIL;
+		//}
+		//else 
+		
+		if (!in_range) // if out of bounds, ignore input
 			return;
 		else if (!in_circle) 
 		{
@@ -637,19 +649,20 @@ void Game::OnEventBasicCircle(BasicCircle*& basicCircle, int key, int action, do
 		{
 			((Slider*)entity_buffer[1])->score = SCORE::FAIL;
 		}
-		delete circle->dataShrinkCircle;
-		delete circle->dataStaticCircle;
-		delete circle->dataTextureCircle;
-		delete entity_buffer[0];
-		entity_buffer.pop_front();
+		//delete circle->dataShrinkCircle;
+		//delete circle->dataStaticCircle;
+		//delete circle->dataTextureCircle;
+		//delete entity_buffer[0];
+		//entity_buffer.pop_front();
 	}
 	else // normal circle
 	{
-		if (x == -1) // circle expires
-		{
-			score_entity_buffer.push_back(CreateDataTextureScore(circle->dataShrinkCircle->center, SCORE::FAIL));
-		}
-		else if (!in_range) // if out of bounds, ignore input
+		//if (x == -1) // circle expires
+		//{
+		//	score_entity_buffer.push_back(CreateDataTextureScore(circle->dataShrinkCircle->center, SCORE::FAIL));
+		//}
+		//else 
+		if (!in_range) // if out of bounds, ignore input
 			return;
 		else if (!in_circle) // for follow, scores in circles aren't necessary. Push entity score buffer
 		{
@@ -682,12 +695,18 @@ void Game::OnEventBasicCircle(BasicCircle*& basicCircle, int key, int action, do
 		{
 			score_entity_buffer.push_back(CreateDataTextureScore(circle->dataShrinkCircle->center, SCORE::FAIL));
 		}
-		delete circle->dataShrinkCircle;
-		delete circle->dataStaticCircle;
-		delete circle->dataTextureCircle;
-		delete entity_buffer[0];
-		entity_buffer.pop_front();
+		//delete circle->dataShrinkCircle;
+		//delete circle->dataStaticCircle;
+		//delete circle->dataTextureCircle;
+		//delete entity_buffer[0];
+		//entity_buffer.pop_front();
 	}
+
+	delete circle->dataShrinkCircle;
+	delete circle->dataStaticCircle;
+	delete circle->dataTextureCircle;
+	delete entity_buffer[0];
+	entity_buffer.pop_front();
 }
 
 void Game::OnEventSlider(Slider*& slider, int key, int action, double x, double y)
@@ -712,7 +731,7 @@ void Game::OnEventSlider(Slider*& slider, int key, int action, double x, double 
 	}
 
 	// slider shrink/expand on click
-	// add in boundary
+	// to do: add in boundary
 	if (keyHold)
 	{
 		if (slider->dataClickSlidingCircle->scaleFactor < 2.0f)
@@ -744,21 +763,63 @@ void Game::DrawSlider(Slider* slider)
 	slider->dataSlider->shader.useProgram();
 	glDrawElements(GL_TRIANGLES, slider->dataSlider->indices.size(), GL_UNSIGNED_INT, (void*)0);
 
+	//double x, y;
+	//glfwGetCursorPos(window, &x, &y);
+	//y = SCREEN_HEIGHT - y;
+	
+	
+	// slider destruction, -1 for x cursor position means slider expired
+	if (slider->dataClickSlidingCircle->repeatCounter > slider->dataSlider->repeat)
+	{
+		if (slider->score != SCORE::SUCCESS) // if success, no texture needed
+		{
+			if (slider->dataSlider->repeat % 2 == 0)
+				score_entity_buffer.push_back(CreateDataTextureScore(slider->dataSlider->endPos, slider->score));
+			else
+				score_entity_buffer.push_back(CreateDataTextureScore(slider->dataSlider->center, slider->score));
+		}
+
+		delete slider->dataSlider;
+		delete slider->dataSlidingCircle;
+		delete slider->dataClickSlidingCircle;
+		delete entity_buffer[0];
+		entity_buffer.pop_front();
+		return;
+	}
+
+	// slider shrink/expand on click
+	// to do: add in boundary
+	if (keyHold)
+	{
+		if (slider->dataClickSlidingCircle->scaleFactor < 2.0f)
+			slider->dataClickSlidingCircle->scaleFactor += CIRCLE_SHRINK_SPEED;
+	}
+	else if (slider->dataClickSlidingCircle->scaleFactor > 1.0f)
+		slider->dataClickSlidingCircle->scaleFactor -= CIRCLE_SHRINK_SPEED;
+
+	glBindVertexArray(slider->dataClickSlidingCircle->vao);
+	slider->dataClickSlidingCircle->shader.useProgram();
+
+	slider->dataClickSlidingCircle->scaleMatrix = glm::scale(glm::vec3(slider->dataClickSlidingCircle->scaleFactor));
+	glUniformMatrix4fv(slider->dataClickSlidingCircle->scaleMatrixLoc, 1, GL_FALSE, glm::value_ptr(slider->dataClickSlidingCircle->scaleMatrix));
+
+	// score deduction for releasing slider
+	if (slider->dataClickSlidingCircle->scaleFactor < 1.0f && slider->score > SCORE::FAIL)
+	{
+		slider->score = SCORE::FAIL;
+	}
+
+	glBindVertexArray(0);
+	slider->dataClickSlidingCircle->shader.unBind();
+
+
+
 	// draw moving base circle
 	if (entity_buffer[0]->type == ENTITY_TYPE::SLIDER) // after the inital circle is finished
 	{
-		double x, y;
-		glfwGetCursorPos(window, &x, &y);
-		y = SCREEN_HEIGHT - y;
-		if (keyHold)
-			OnEvent(GLFW_KEY_Z, GLFW_REPEAT, x, y);
-		else
-			OnEvent(GLFW_KEY_Z, GLFW_RELEASE, x, y);
-
 		// base circle draw
 		glBindVertexArray(slider->dataSlidingCircle->vao);
 		slider->dataSlidingCircle->shader.useProgram();
-		glDrawElements(GL_TRIANGLES, slider->dataSlidingCircle->indices.size(), GL_UNSIGNED_INT, (void*)0);
 
 		if (slider->dataSlidingCircle->repeatCounter <= slider->dataSlider->repeat)
 		{
@@ -814,11 +875,12 @@ void Game::DrawSlider(Slider* slider)
 
 		}
 
+		glDrawElements(GL_TRIANGLES, slider->dataSlidingCircle->indices.size(), GL_UNSIGNED_INT, (void*)0);
+
 
 		// click circle draw
 		glBindVertexArray(slider->dataClickSlidingCircle->vao);
 		slider->dataClickSlidingCircle->shader.useProgram();
-		glDrawElements(GL_TRIANGLES, slider->dataClickSlidingCircle->indices.size(), GL_UNSIGNED_INT, (void*)0);
 
 		if (slider->dataClickSlidingCircle->repeatCounter <= slider->dataSlider->repeat)
 		{
@@ -873,11 +935,13 @@ void Game::DrawSlider(Slider* slider)
 				slider->dataClickSlidingCircle->repeatCounter++;
 
 		}
+
+		glDrawElements(GL_TRIANGLES, slider->dataClickSlidingCircle->indices.size(), GL_UNSIGNED_INT, (void*)0);
 	}
 
 	if (slider->dataSlidingCircle->repeatCounter > slider->dataSlider->repeat) // slider expired
 	{
-		OnEvent(GLFW_KEY_Z, GLFW_RELEASE, -1, -1);
+		OnEvent(GLFW_KEY_Z, NULL, -1, -1);
 	}
 
 	glBindVertexArray(0);

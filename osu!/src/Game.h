@@ -207,8 +207,8 @@ public:
 		glm::vec4 color_static_circle = glm::vec4(0.8f, 0.5f, 1.0f, 1.0f),
 		glm::vec4 color_center = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f), 
 		const float circle_init_size = 2.5f, 
-		const float circle_shrink_speed = 0.01f, 
-		const float slider_speed = 6.0f, 
+		const float circle_shrink_speed = 0.001f, 
+		const float slider_speed = 0.1f, 
 		const int hold = 0);
 	~Game();
 
