@@ -169,9 +169,11 @@
     <ClInclude Include="src\vendor\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\shaders\basicFragment.shader" />
-    <None Include="src\shaders\basicVertex.shader" />
+    <None Include="src\shaders\clickSlidingBaseFragment.shader" />
+    <None Include="src\shaders\clickSlidingBaseVertex.shader" />
     <None Include="src\shaders\shrinkFragment.shader" />
+    <None Include="src\shaders\slidingBaseFragment.shader" />
+    <None Include="src\shaders\slidingBaseVertex.shader" />
     <None Include="src\shaders\staticVertex.shader" />
     <None Include="src\shaders\staticFragment.shader" />
     <None Include="src\shaders\shrinkVertex.shader" />

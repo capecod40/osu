@@ -20,6 +20,7 @@ public:
 	Shader(std::string vertexFilepath, std::string fragmentFilepath);
 
 	void useProgram() const;
+	inline void unBind() const { glUseProgram(0); }
 
 	inline unsigned int getProgramID() const { return programID; }
 };

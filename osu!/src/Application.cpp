@@ -86,7 +86,7 @@ GL_DEBUG_CALLBACK
 
 int main()
 {
-
+	
 	if (glfwInit() == GLFW_FALSE)
 		std::cout << "GLFW init failed!" << std::endl;
 
@@ -118,7 +118,9 @@ int main()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	Game* game = new Game();
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // wire
+
+	Game* game = new Game(window);
 	BeatMap beatMap(game, 124, 4);
 
 	glfwSetWindowUserPointer(window, game); // do research: static cast
