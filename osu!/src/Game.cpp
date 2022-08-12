@@ -446,7 +446,7 @@ DataClickSlidingCirle* Game::CreateDataClickSlidingCircle(const glm::vec3 startP
 		CIRCLE_OUTER_RADIUS,
 		CIRCLE_RESOLUTION,
 		COLOR_BACKGROUND,
-		COLOR_STATIC_CIRCLE,
+		COLOR_SHRINK_CIRCLE,
 		COLOR_CENTER);
 
 	ASSERT(glBufferData(GL_ARRAY_BUFFER, dataClickSlidingCircle->points.size() * sizeof(float), &(dataClickSlidingCircle->points[0]), GL_STATIC_DRAW));
@@ -610,12 +610,6 @@ void Game::OnEventBasicCircle(BasicCircle*& basicCircle, int key, int action, do
 
 	if (entity_buffer[1]->type == ENTITY_TYPE::SLIDER) // for slider initial circles: sends score data to slider instead of drawing score texture
 	{
-		//if (x == -1) // circle expires
-		//{
-		//	((Slider*)entity_buffer[1])->score = SCORE::FAIL;
-		//}
-		//else 
-		
 		if (!in_range) // if out of bounds, ignore input
 			return;
 		else if (!in_circle) 
@@ -649,19 +643,10 @@ void Game::OnEventBasicCircle(BasicCircle*& basicCircle, int key, int action, do
 		{
 			((Slider*)entity_buffer[1])->score = SCORE::FAIL;
 		}
-		//delete circle->dataShrinkCircle;
-		//delete circle->dataStaticCircle;
-		//delete circle->dataTextureCircle;
-		//delete entity_buffer[0];
-		//entity_buffer.pop_front();
 	}
+
 	else // normal circle
 	{
-		//if (x == -1) // circle expires
-		//{
-		//	score_entity_buffer.push_back(CreateDataTextureScore(circle->dataShrinkCircle->center, SCORE::FAIL));
-		//}
-		//else 
 		if (!in_range) // if out of bounds, ignore input
 			return;
 		else if (!in_circle) // for follow, scores in circles aren't necessary. Push entity score buffer
@@ -695,11 +680,6 @@ void Game::OnEventBasicCircle(BasicCircle*& basicCircle, int key, int action, do
 		{
 			score_entity_buffer.push_back(CreateDataTextureScore(circle->dataShrinkCircle->center, SCORE::FAIL));
 		}
-		//delete circle->dataShrinkCircle;
-		//delete circle->dataStaticCircle;
-		//delete circle->dataTextureCircle;
-		//delete entity_buffer[0];
-		//entity_buffer.pop_front();
 	}
 
 	delete circle->dataShrinkCircle;
@@ -763,10 +743,6 @@ void Game::DrawSlider(Slider* slider)
 	slider->dataSlider->shader.useProgram();
 	glDrawElements(GL_TRIANGLES, slider->dataSlider->indices.size(), GL_UNSIGNED_INT, (void*)0);
 
-	//double x, y;
-	//glfwGetCursorPos(window, &x, &y);
-	//y = SCREEN_HEIGHT - y;
-	
 	
 	// slider destruction, -1 for x cursor position means slider expired
 	if (slider->dataClickSlidingCircle->repeatCounter > slider->dataSlider->repeat)
@@ -791,8 +767,19 @@ void Game::DrawSlider(Slider* slider)
 	// to do: add in boundary
 	if (keyHold)
 	{
-		if (slider->dataClickSlidingCircle->scaleFactor < 2.0f)
-			slider->dataClickSlidingCircle->scaleFactor += CIRCLE_SHRINK_SPEED;
+		if (slider->dataClickSlidingCircle->scaleFactor < 1.75f)
+		{
+			double x, y;
+			glfwGetCursorPos(window, &x, &y);
+			y = SCREEN_HEIGHT - y;
+
+			bool in_circle = y <= sqrt(CIRCLE_RADIUS * CIRCLE_RADIUS - pow(x - (slider->dataSlidingCircle->translateXPos + slider->dataSlidingCircle->center.x), 2)) + (slider->dataSlidingCircle->translateYPos + slider->dataSlidingCircle->center.y) &&
+				y >= (slider->dataSlidingCircle->translateYPos + slider->dataSlidingCircle->center.y) - sqrt(CIRCLE_RADIUS * CIRCLE_RADIUS - pow(x - (slider->dataSlidingCircle->translateXPos + slider->dataSlidingCircle->center.x), 2));
+
+			if (in_circle)
+				slider->dataClickSlidingCircle->scaleFactor += CIRCLE_SHRINK_SPEED;
+			
+		}
 	}
 	else if (slider->dataClickSlidingCircle->scaleFactor > 1.0f)
 		slider->dataClickSlidingCircle->scaleFactor -= CIRCLE_SHRINK_SPEED;

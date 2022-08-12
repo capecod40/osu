@@ -60,7 +60,9 @@ void BeatMap::Map()
 {
 	int tracker = 0;
 
-	AddEntity(tracker++, 1, 1, ENTITY_TYPE::SLIDER, glm::vec3(200.0f, 600.0f, 0.0f), 1, glm::vec3(1600.0f, 600.0f, 0.0f), 1);
+	AddEntity(tracker++, 1, 1, ENTITY_TYPE::BASIC, glm::vec3(200.0f, 600.0f, 0.0f), 1);
+	AddEntity(tracker++, 1, 2, ENTITY_TYPE::SLIDER, glm::vec3(200.0f, 600.0f, 0.0f), 2, glm::vec3(1600.0f, 600.0f, 0.0f), 1);
+
 	//AddEntity(1, 3, ENTITY_TYPE::BASIC, glm::vec3(500.0f, 300.0f, 0.0f), 3, tracker++);
 	//AddEntity(1, 4, ENTITY_TYPE::BASIC, glm::vec3(600.0f, 300.0f, 0.0f), 4, tracker++);
 
