@@ -176,6 +176,7 @@ private:
 
 	bool inMenu;
 	DataMenu* menu;
+	DataTextureCircle* menu_logo;
 
 	BasicCircle* CreateBasicCircle(const glm::vec3 center, const int index);
 	DataShrinkCircle* CreateDataShrinkCircle(const glm::vec3 center);

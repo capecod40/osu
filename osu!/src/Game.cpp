@@ -37,6 +37,7 @@ Game::Game(GLFWwindow* win,
 	stbi_set_flip_vertically_on_load(true);
 	orthoMatrix = glm::ortho(0.0f, 1920.0f, 0.0f, 1080.0f);
 	this->menu = CreateDataMenu();
+	this->menu_logo = CreateDataTextureCircle(glm::vec3(SCREEN_WIDTH / 2.0f, SCREEN_HEIGHT * 0.88f, 0.0f), -1);
 }
 
 Game::~Game()
@@ -176,8 +177,10 @@ DataTextureCircle* Game::CreateDataTextureCircle(const glm::vec3 center, const i
 	dataTextureCircle->index = index;
 	dataTextureCircle->center = center;
 
-
-	GenDataTexture(dataTextureCircle->points, dataTextureCircle->indices, dataTextureCircle->center /* default texture dimensions */);
+	if (index == -1)
+		GenDataTexture(dataTextureCircle->points, dataTextureCircle->indices, dataTextureCircle->center, SCREEN_HEIGHT * 0.10f, SCREEN_HEIGHT * 0.10f);
+	else
+		GenDataTexture(dataTextureCircle->points, dataTextureCircle->indices, dataTextureCircle->center /* default texture dimensions */);
 	
 	ASSERT(glBufferData(GL_ARRAY_BUFFER, dataTextureCircle->points.size() * sizeof(float), &dataTextureCircle->points[0], GL_STATIC_DRAW));
 	ASSERT(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0));
@@ -199,6 +202,9 @@ DataTextureCircle* Game::CreateDataTextureCircle(const glm::vec3 center, const i
 	std::string texturePath;
 	switch (index)
 	{
+		case -1:
+			texturePath = "res/textures/credits/menu_logo.png";
+			break;
 		case 1:
 			texturePath = "res/textures/numbers/1.png";
 			break;
@@ -1054,10 +1060,12 @@ void Game::DrawMenu()
 		glUniformMatrix4fv(menu->scaleMatrixLoc, 1, GL_FALSE, glm::value_ptr(menu->scaleMatrix));
 	}
 
-
-
-
 	glDrawElements(GL_TRIANGLES, menu->indices.size(), GL_UNSIGNED_INT, (void*)0);
+
+	glBindVertexArray(menu_logo->vao);
+	menu_logo->shader.useProgram();
+	glBindTexture(GL_TEXTURE_2D, menu_logo->textureID);
+	glDrawElements(GL_TRIANGLES, menu_logo->indices.size(), GL_UNSIGNED_INT, (void*)0);
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
