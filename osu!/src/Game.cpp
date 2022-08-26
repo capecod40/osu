@@ -15,7 +15,8 @@ Game::Game(GLFWwindow* win,
 	const float circle_init_size /*= 4.5f*/,
 	const float circle_shrink_speed /*= 0.01f*/, 
 	const float slider_speed /*= 1.0f*/, 
-	const int hold /*= false*/)
+	const int hold /*= false*/, 
+	const bool menu /*= false*/)
 	: window(win),
 	CIRCLE_INNER_RADIUS(circleInnerRadius),
 	CIRCLE_RADIUS(circleRadius), 
@@ -29,11 +30,13 @@ Game::Game(GLFWwindow* win,
 	CIRCLE_INIT_SIZE(circle_init_size), 
 	CIRCLE_SHRINK_SPEED(circle_shrink_speed), 
 	SLIDER_SPEED(slider_speed), 
-	keyHold(hold)
+	keyHold(hold), 
+	inMenu(menu)
 {
 	sound_engine = irrklang::createIrrKlangDevice();
 	stbi_set_flip_vertically_on_load(true);
 	orthoMatrix = glm::ortho(0.0f, 1920.0f, 0.0f, 1080.0f);
+	this->menu = CreateDataMenu();
 }
 
 Game::~Game()
@@ -172,6 +175,8 @@ DataTextureCircle* Game::CreateDataTextureCircle(const glm::vec3 center, const i
 
 	dataTextureCircle->index = index;
 	dataTextureCircle->center = center;
+
+
 	GenDataTexture(dataTextureCircle->points, dataTextureCircle->indices, dataTextureCircle->center /* default texture dimensions */);
 	
 	ASSERT(glBufferData(GL_ARRAY_BUFFER, dataTextureCircle->points.size() * sizeof(float), &dataTextureCircle->points[0], GL_STATIC_DRAW));
@@ -491,29 +496,113 @@ DataClickSlidingCirle* Game::CreateDataClickSlidingCircle(const glm::vec3 startP
 	return dataClickSlidingCircle;
 }
 
-void Game::Draw()
+DataMenu* Game::CreateDataMenu()
 {
+	DataMenu* dataMenu = new DataMenu;
 
-	for (int i = entity_buffer.size() - 1; i >= 0; i--)
+	ASSERT(glCreateVertexArrays(1, &dataMenu->vao));
+	ASSERT(glBindVertexArray(dataMenu->vao));
+
+	ASSERT(glGenBuffers(1, &dataMenu->vbo));
+	ASSERT(glBindBuffer(GL_ARRAY_BUFFER, dataMenu->vbo));
+
+	dataMenu->center = glm::vec3(SCREEN_WIDTH / 2.0f, SCREEN_HEIGHT / 2.0f, 0.0f);
+
+
+	GenDataTexture(dataMenu->points, dataMenu->indices, dataMenu->center, 100.0f, 100.0f);
+
+	ASSERT(glBufferData(GL_ARRAY_BUFFER, dataMenu->points.size() * sizeof(float), &dataMenu->points[0], GL_STATIC_DRAW));
+	ASSERT(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0));
+	ASSERT(glEnableVertexAttribArray(0));
+
+	ASSERT(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float))));
+	ASSERT(glEnableVertexAttribArray(1));
+
+	ASSERT(glGenBuffers(1, &dataMenu->ebo));
+	ASSERT(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, dataMenu->ebo));
+	ASSERT(glBufferData(GL_ELEMENT_ARRAY_BUFFER, dataMenu->indices.size() * sizeof(unsigned int), &dataMenu->indices[0], GL_STATIC_DRAW));
+
+	dataMenu->shader = Shader("src/shaders/menuVertex.shader", "src/shaders/menuFragment.shader");
+	dataMenu->shader.useProgram();
+
+	dataMenu->toOrigin = glm::translate(glm::vec3(-1.0f) * dataMenu->center);
+	dataMenu->fromOrigin = glm::translate(dataMenu->center);
+	dataMenu->scaleMatrix = glm::scale(glm::vec3(1.0f));
+
+	int uniformLocation = glGetUniformLocation(dataMenu->shader.getProgramID(), "orthoMatrix");
+	glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(orthoMatrix));
+
+	uniformLocation = glGetUniformLocation(dataMenu->shader.getProgramID(), "toOrigin");
+	glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(dataMenu->toOrigin));
+	
+	uniformLocation = glGetUniformLocation(dataMenu->shader.getProgramID(), "fromOrigin");
+	glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(dataMenu->fromOrigin));
+
+	dataMenu->scaleMatrixLoc = glGetUniformLocation(dataMenu->shader.getProgramID(), "scaleMatrix");
+	glUniformMatrix4fv(dataMenu->scaleMatrixLoc, 1, GL_FALSE, glm::value_ptr(dataMenu->scaleMatrix));
+
+	int x, y, n;
+	unsigned char* imageData = stbi_load("res/textures/play.png", &x, &y, &n, 0);
+
+	if (!imageData)
 	{
-		if (entity_buffer[i]->type == ENTITY_TYPE::BASIC)
-			DrawBasicCircle((BasicCircle*)entity_buffer[i]);
-		else if (entity_buffer[i]->type == ENTITY_TYPE::SLIDER)
-		{
-			DrawSlider((Slider*)entity_buffer[i]);
-		}
-		else
-		{
-			std::cout << "Unknown Entity" << std::endl;
-			__debugbreak();
-		}
+		std::cout << "Failed to load image data!" << std::endl;
+		__debugbreak();
 	}
 
-	for (int i = 0; i < score_entity_buffer.size(); i++)
-	{
-		DrawTextureScore(score_entity_buffer[i]);
-	}
+	ASSERT(glGenTextures(1, &dataMenu->textureID));
+	ASSERT(glBindTexture(GL_TEXTURE_2D, dataMenu->textureID));
+	ASSERT(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+	ASSERT(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+	ASSERT(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+	ASSERT(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+	ASSERT(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, x, y, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData));
+
+	stbi_image_free(imageData);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glUseProgram(0);
+
+	return dataMenu;
 }
+
+//void Game::Draw()
+//{
+//	if (inMenu)
+//	{
+//		DrawMenu();
+//		return;
+//	}
+//
+//	if (entity_buffer.size() == 0)
+//	{
+//		return;
+//	}
+//
+//	beatMap->Map();
+//
+//	for (int i = entity_buffer.size() - 1; i >= 0; i--)
+//	{
+//		if (entity_buffer[i]->type == ENTITY_TYPE::BASIC)
+//			DrawBasicCircle((BasicCircle*)entity_buffer[i]);
+//		else if (entity_buffer[i]->type == ENTITY_TYPE::SLIDER)
+//		{
+//			DrawSlider((Slider*)entity_buffer[i]);
+//		}
+//		else
+//		{
+//			std::cout << "Unknown Entity" << std::endl;
+//			__debugbreak();
+//		}
+//	}
+//
+//	for (int i = 0; i < score_entity_buffer.size(); i++)
+//	{
+//		DrawTextureScore(score_entity_buffer[i]);
+//	}
+//}
 
 void Game::DrawBasicCircle(BasicCircle* circle)
 {
@@ -534,8 +623,10 @@ void Game::DrawBasicCircle(BasicCircle* circle)
 	}
 	else // destroy circle
 	{
-		if (entity_buffer[1]->type == ENTITY_TYPE::SLIDER)
+		if (entity_buffer.size() != 1 && entity_buffer[1]->type == ENTITY_TYPE::SLIDER)
+		{
 			((Slider*)entity_buffer[1])->score = SCORE::FAIL;
+		}
 		else
 			score_entity_buffer.push_back(CreateDataTextureScore(circle->dataShrinkCircle->center, SCORE::FAIL));
 
@@ -608,7 +699,7 @@ void Game::OnEventBasicCircle(BasicCircle*& basicCircle, int key, int action, do
 		y >= circle->dataShrinkCircle->center.y - sqrt(CIRCLE_RADIUS * CIRCLE_RADIUS - pow(x - circle->dataShrinkCircle->center.x, 2));
 
 
-	if (entity_buffer[1]->type == ENTITY_TYPE::SLIDER) // for slider initial circles: sends score data to slider instead of drawing score texture
+	if (entity_buffer.size() > 1 && entity_buffer[1]->type == ENTITY_TYPE::SLIDER) // for slider initial circles: sends score data to slider instead of drawing score texture
 	{
 		if (!in_range) // if out of bounds, ignore input
 			return;
@@ -649,7 +740,7 @@ void Game::OnEventBasicCircle(BasicCircle*& basicCircle, int key, int action, do
 	{
 		if (!in_range) // if out of bounds, ignore input
 			return;
-		else if (!in_circle) // for follow, scores in circles aren't necessary. Push entity score buffer
+		else if (!in_circle)
 		{
 			score_entity_buffer.push_back(CreateDataTextureScore(circle->dataShrinkCircle->center, SCORE::FAIL));
 		}
@@ -938,12 +1029,100 @@ void Game::DrawSlider(Slider* slider)
 	glUseProgram(0);
 }
 
-void Game::OnEvent(int key, int action, double x, double y)
+void Game::DrawMenu()
 {
+	glBindVertexArray(menu->vao);
+	menu->shader.useProgram();
+	glBindTexture(GL_TEXTURE_2D, menu->textureID);
+
+	double x, y;
+	glfwGetCursorPos(window, &x, &y);
+	y = SCREEN_HEIGHT - y;
+
+	bool on_play = x <= menu->center.x + 125.0f && x >= menu->center.x - 125.0f &&
+		y <= menu->center.y + 125.0f && y >= menu->center.y - 125.0f;
+
+	if (on_play && menu->scaleFactor < 1.1f)
+	{
+		menu->scaleFactor += CIRCLE_SHRINK_SPEED * 0.5f;
+		menu->scaleMatrix = glm::scale(glm::vec3(menu->scaleFactor));
+		glUniformMatrix4fv(menu->scaleMatrixLoc, 1, GL_FALSE, glm::value_ptr(menu->scaleMatrix));
+	}
+	else if (menu->scaleFactor > 1.0f)
+	{
+		menu->scaleFactor -= CIRCLE_SHRINK_SPEED * 0.5f;
+		menu->scaleMatrix = glm::scale(glm::vec3(menu->scaleFactor));
+		glUniformMatrix4fv(menu->scaleMatrixLoc, 1, GL_FALSE, glm::value_ptr(menu->scaleMatrix));
+	}
+
+
+
+
+	glDrawElements(GL_TRIANGLES, menu->indices.size(), GL_UNSIGNED_INT, (void*)0);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glUseProgram(0);
+}
+
+#include "BeatMap.h" // circular dependency of BeatMap and Game
+
+void Game::Draw()
+{
+	if (inMenu)
+	{
+		DrawMenu();
+		return;
+	}
+
+	beatMap->Map();
+
 	if (entity_buffer.size() == 0)
 	{
 		return;
 	}
+
+	for (int i = entity_buffer.size() - 1; i >= 0; i--)
+	{
+		if (entity_buffer[i]->type == ENTITY_TYPE::BASIC)
+			DrawBasicCircle((BasicCircle*)entity_buffer[i]);
+		else if (entity_buffer[i]->type == ENTITY_TYPE::SLIDER)
+		{
+			DrawSlider((Slider*)entity_buffer[i]);
+		}
+		else
+		{
+			std::cout << "Unknown Entity" << std::endl;
+			__debugbreak();
+		}
+	}
+
+	for (int i = 0; i < score_entity_buffer.size(); i++)
+	{
+		DrawTextureScore(score_entity_buffer[i]);
+	}
+}
+
+void Game::OnEvent(int key, int action, double x, double y)
+{
+	// menu
+	if (inMenu)
+	{
+		bool on_play = x <= menu->center.x + 125.0f && x >= menu->center.x - 125.0f &&
+			y <= menu->center.y + 125.0f && y >= menu->center.y - 125.0f;
+
+		if (on_play && action == GLFW_PRESS)
+		{
+			inMenu = false;
+			sound_engine->play2D("res/audio/believer - delay.ogg");
+			beatMap = new BeatMap(this, 124, 4);
+		}
+		return;
+	}
+
+	// game
 	else if (key != GLFW_KEY_Z && key != GLFW_KEY_X && key != GLFW_MOUSE_BUTTON_1)
 		return;
 
@@ -952,6 +1131,8 @@ void Game::OnEvent(int key, int action, double x, double y)
 	else if (action == GLFW_RELEASE && keyHold > 0)
 		keyHold--;
 
+	if (entity_buffer.size() == 0 && action == GLFW_RELEASE) // crashes when clicking start button
+		return;
 
 	switch (entity_buffer[0]->type)
 	{
@@ -968,7 +1149,6 @@ void Game::OnEvent(int key, int action, double x, double y)
 			OnEventSlider(slider, key, action, x, y);
 			break;
 		}
-
 	}
 }
 

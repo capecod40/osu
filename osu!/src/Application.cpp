@@ -134,8 +134,6 @@ int main()
 		ASSERT(glClearColor(0.2f, 0.2f, 0.2f, 1.0f));
 		ASSERT(glClear(GL_COLOR_BUFFER_BIT));
 
-		beatMap.Map();
-
 		game->Draw();
 
 		glfwSwapBuffers(window);

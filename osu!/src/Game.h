@@ -100,6 +100,19 @@ struct DataSlider : public DataCircle
 	bool endIsUnderStart;
 };
 
+struct DataMenu : public DataCircle
+{
+	DataMenu() : scaleMatrix(glm::mat4(1.0f)), scaleFactor(1.0f), toOrigin(glm::mat4(1.0f)), fromOrigin(glm::mat4(1.0f)), DataCircle() {}
+
+	unsigned int textureID;
+	int scaleMatrixLoc;
+	glm::mat4 scaleMatrix;
+	float scaleFactor;
+
+	glm::mat4 toOrigin;
+	glm::mat4 fromOrigin;
+};
+
 struct Entity
 {
 	ENTITY_TYPE type;
@@ -130,6 +143,7 @@ private:
 
 	GLFWwindow* window;
 	irrklang::ISoundEngine* sound_engine;
+	BeatMap* beatMap;
 
 	std::deque<Entity*> entity_buffer;
 	std::deque<DataTextureScore*> score_entity_buffer;
@@ -149,6 +163,9 @@ private:
 
 	int keyHold;
 
+	bool inMenu;
+	DataMenu* menu;
+
 	BasicCircle* CreateBasicCircle(const glm::vec3 center, const int index);
 	DataShrinkCircle* CreateDataShrinkCircle(const glm::vec3 center);
 	DataStaticCircle* CreateDataStaticCircle(const glm::vec3 center);
@@ -160,6 +177,7 @@ private:
 	DataSlider* CreateDataSlider(const glm::vec3 startPos, const glm::vec3 endPos, const int repeat);
 	DataSlidingCircle* CreateDataSlidingCircle(const glm::vec3 startPos, const glm::vec3 endPos, const int repeat);
 	DataClickSlidingCirle* CreateDataClickSlidingCircle(const glm::vec3 startPos, const glm::vec3 endPos, const int repeat);
+	DataMenu* CreateDataMenu();
 
 	void GenDataCircle(std::vector<float>& points,
 		std::vector<unsigned int>& indices,
@@ -175,8 +193,8 @@ private:
 	void GenDataTexture(std::vector<float>& points,
 		std::vector<unsigned int>& indices,
 		const glm::vec3 center,
-		const float width = 20.0f,
-		const float height = 30.0f);
+		const float width = 10.0f,
+		const float height = 15.0f);
 	void GenDataSlider(std::vector<float>& points,
 		std::vector<unsigned int>& indices,
 		const glm::vec3 startPos,
@@ -192,6 +210,7 @@ private:
 	void DrawBasicCircle(BasicCircle* circle);
 	void DrawTextureScore(DataTextureScore* score);
 	void DrawSlider(Slider* slider);
+	void DrawMenu();
 
 	void OnEventBasicCircle(BasicCircle*& basicCircle, int key, int action, double x, double y);
 	void OnEventSlider(Slider*& slider, int key, int action, double x, double y);
@@ -207,9 +226,10 @@ public:
 		glm::vec4 color_static_circle = glm::vec4(0.8f, 0.5f, 1.0f, 1.0f),
 		glm::vec4 color_center = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f), 
 		const float circle_init_size = 2.5f, 
-		const float circle_shrink_speed = 0.001f, 
+		const float circle_shrink_speed = 0.0003f, 
 		const float slider_speed = 0.1f, 
-		const int hold = 0);
+		const int hold = 0, 
+		const bool menu = true);
 	~Game();
 
 

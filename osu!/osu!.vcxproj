@@ -171,6 +171,8 @@
   <ItemGroup>
     <None Include="src\shaders\clickSlidingBaseFragment.shader" />
     <None Include="src\shaders\clickSlidingBaseVertex.shader" />
+    <None Include="src\shaders\menuFragment.shader" />
+    <None Include="src\shaders\menuVertex.shader" />
     <None Include="src\shaders\shrinkFragment.shader" />
     <None Include="src\shaders\slidingBaseFragment.shader" />
     <None Include="src\shaders\slidingBaseVertex.shader" />
