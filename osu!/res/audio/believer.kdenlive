@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<mlt LC_NUMERIC="C" producer="main_bin" version="7.3.0" root="C:/dev/osu/osu!/res/audio">
+<mlt LC_NUMERIC="C" producer="main_bin" version="7.7.0" root="C:/dev/osu/osu!/res/audio">
  <profile frame_rate_num="30000" sample_aspect_num="1" display_aspect_den="9" colorspace="709" progressive="1" description="HD 1080p 29.97 fps" display_aspect_num="16" frame_rate_den="1001" width="1920" height="1080" sample_aspect_den="1"/>
  <producer id="producer0" in="00:00:00.000" out="00:03:24.358">
   <property name="length">6125</property>
@@ -26,11 +26,39 @@
   <property name="kdenlive:file_size">3957780</property>
   <property name="kdenlive:file_hash">cd4fe7c91c919d1efc01b0ee935472f3</property>
   <property name="kdenlive:audio_max0">254</property>
+  <property name="kdenlive:clip_type">1</property>
+ </producer>
+ <producer id="producer1" in="00:00:00.000" out="00:01:26.593">
+  <property name="length">2596</property>
+  <property name="eof">pause</property>
+  <property name="resource">believer - short.ogg</property>
+  <property name="meta.media.nb_streams">1</property>
+  <property name="meta.media.0.stream.type">audio</property>
+  <property name="meta.media.0.codec.sample_fmt">fltp</property>
+  <property name="meta.media.0.codec.sample_rate">48000</property>
+  <property name="meta.media.0.codec.channels">2</property>
+  <property name="meta.media.0.codec.name">vorbis</property>
+  <property name="meta.media.0.codec.long_name">Vorbis</property>
+  <property name="meta.media.0.codec.bit_rate">160000</property>
+  <property name="meta.attr.0.stream.language.markup">eng</property>
+  <property name="meta.attr.0.stream.encoder.markup">Lavc59.36.100 libvorbis</property>
+  <property name="seekable">1</property>
+  <property name="audio_index">0</property>
+  <property name="video_index">-1</property>
+  <property name="mute_on_pause">1</property>
+  <property name="mlt_service">avformat</property>
+  <property name="kdenlive:clipname"/>
+  <property name="kdenlive:clip_type">1</property>
+  <property name="kdenlive:folderid">-1</property>
+  <property name="kdenlive:id">3</property>
+  <property name="kdenlive:file_size">1602973</property>
+  <property name="kdenlive:file_hash">f0c703e39e1ba58eaa6fde0aa41fa99c</property>
+  <property name="kdenlive:audio_max0">250</property>
  </producer>
  <playlist id="main_bin">
   <property name="kdenlive:docproperties.activeTrack">1</property>
   <property name="kdenlive:docproperties.audioChannels">2</property>
-  <property name="kdenlive:docproperties.audioTarget">-1</property>
+  <property name="kdenlive:docproperties.audioTarget">1</property>
   <property name="kdenlive:docproperties.disablepreview">0</property>
   <property name="kdenlive:docproperties.documentid">1660484220627</property>
   <property name="kdenlive:docproperties.enableTimelineZone">0</property>
@@ -42,8 +70,8 @@
   <property name="kdenlive:docproperties.groups">[
 ]
 </property>
-  <property name="kdenlive:docproperties.kdenliveversion">21.12.0</property>
-  <property name="kdenlive:docproperties.position">112</property>
+  <property name="kdenlive:docproperties.kdenliveversion">22.04.0</property>
+  <property name="kdenlive:docproperties.position">387</property>
   <property name="kdenlive:docproperties.previewextension"/>
   <property name="kdenlive:docproperties.previewparameters"/>
   <property name="kdenlive:docproperties.profile">atsc_1080p_2997</property>
@@ -70,39 +98,109 @@
   <property name="kdenlive:docproperties.renderspeed">2</property>
   <property name="kdenlive:docproperties.renderstartguide">-1</property>
   <property name="kdenlive:docproperties.rendertcoverlay">0</property>
-  <property name="kdenlive:docproperties.rendertctype">0</property>
+  <property name="kdenlive:docproperties.rendertctype">-1</property>
   <property name="kdenlive:docproperties.rendertwopass">0</property>
-  <property name="kdenlive:docproperties.renderurl">believer - delay.ogg</property>
+  <property name="kdenlive:docproperties.renderurl">believer - delay edited.ogg</property>
   <property name="kdenlive:docproperties.renderzone">0</property>
-  <property name="kdenlive:docproperties.scrollPos">1560</property>
+  <property name="kdenlive:docproperties.scrollPos">9478</property>
   <property name="kdenlive:docproperties.seekOffset">30000</property>
   <property name="kdenlive:docproperties.version">1.04</property>
   <property name="kdenlive:docproperties.verticalzoom">1</property>
   <property name="kdenlive:docproperties.videoTarget">-1</property>
   <property name="kdenlive:docproperties.zonein">0</property>
   <property name="kdenlive:docproperties.zoneout">75</property>
-  <property name="kdenlive:docproperties.zoom">2</property>
+  <property name="kdenlive:docproperties.zoom">1</property>
   <property name="kdenlive:expandedFolders"/>
   <property name="kdenlive:documentnotes"/>
+  <property name="kdenlive:docproperties.rendermode">0</property>
+  <property name="kdenlive:docproperties.renderpreview">0</property>
   <property name="xml_retain">1</property>
   <entry producer="producer0" in="00:00:00.000" out="00:03:24.358"/>
+  <entry producer="producer1" in="00:00:00.000" out="00:01:26.593"/>
  </playlist>
- <producer id="black_track" in="00:00:00.000" out="00:20:09.009">
+ <producer id="black_track" in="00:00:00.000" out="00:18:11.645">
   <property name="length">2147483647</property>
   <property name="eof">continue</property>
   <property name="resource">black</property>
   <property name="aspect_ratio">1</property>
   <property name="mlt_service">color</property>
-  <property name="mlt_image_format">rgb24a</property>
+  <property name="mlt_image_format">rgba</property>
   <property name="set.test_audio">0</property>
+ </producer>
+ <producer id="producer2" in="00:00:00.000" out="00:01:26.593">
+  <property name="length">2596</property>
+  <property name="eof">pause</property>
+  <property name="resource">believer - short.ogg</property>
+  <property name="meta.media.nb_streams">1</property>
+  <property name="meta.media.0.stream.type">audio</property>
+  <property name="meta.media.0.codec.sample_fmt">fltp</property>
+  <property name="meta.media.0.codec.sample_rate">48000</property>
+  <property name="meta.media.0.codec.channels">2</property>
+  <property name="meta.media.0.codec.name">vorbis</property>
+  <property name="meta.media.0.codec.long_name">Vorbis</property>
+  <property name="meta.media.0.codec.bit_rate">160000</property>
+  <property name="meta.attr.0.stream.language.markup">eng</property>
+  <property name="meta.attr.0.stream.encoder.markup">Lavc59.36.100 libvorbis</property>
+  <property name="seekable">1</property>
+  <property name="audio_index">0</property>
+  <property name="video_index">-1</property>
+  <property name="mute_on_pause">0</property>
+  <property name="mlt_service">avformat-novalidate</property>
+  <property name="kdenlive:clipname"/>
+  <property name="kdenlive:clip_type">1</property>
+  <property name="kdenlive:folderid">-1</property>
+  <property name="kdenlive:id">3</property>
+  <property name="kdenlive:file_size">1602973</property>
+  <property name="kdenlive:file_hash">f0c703e39e1ba58eaa6fde0aa41fa99c</property>
+  <property name="kdenlive:audio_max0">250</property>
+  <property name="xml">was here</property>
+  <property name="set.test_audio">1</property>
+  <property name="set.test_image">1</property>
+ </producer>
+ <producer id="producer3" in="00:00:00.000" out="00:01:26.593">
+  <property name="length">2596</property>
+  <property name="eof">pause</property>
+  <property name="resource">believer - short.ogg</property>
+  <property name="meta.media.nb_streams">1</property>
+  <property name="meta.media.0.stream.type">audio</property>
+  <property name="meta.media.0.codec.sample_fmt">fltp</property>
+  <property name="meta.media.0.codec.sample_rate">48000</property>
+  <property name="meta.media.0.codec.channels">2</property>
+  <property name="meta.media.0.codec.name">vorbis</property>
+  <property name="meta.media.0.codec.long_name">Vorbis</property>
+  <property name="meta.media.0.codec.bit_rate">160000</property>
+  <property name="meta.attr.0.stream.language.markup">eng</property>
+  <property name="meta.attr.0.stream.encoder.markup">Lavc59.36.100 libvorbis</property>
+  <property name="seekable">1</property>
+  <property name="audio_index">0</property>
+  <property name="video_index">-1</property>
+  <property name="mute_on_pause">0</property>
+  <property name="mlt_service">avformat-novalidate</property>
+  <property name="kdenlive:clipname"/>
+  <property name="kdenlive:clip_type">1</property>
+  <property name="kdenlive:folderid">-1</property>
+  <property name="kdenlive:id">3</property>
+  <property name="kdenlive:file_size">1602973</property>
+  <property name="kdenlive:file_hash">f0c703e39e1ba58eaa6fde0aa41fa99c</property>
+  <property name="kdenlive:audio_max0">250</property>
+  <property name="xml">was here</property>
+  <property name="set.test_audio">0</property>
+  <property name="set.test_image">1</property>
  </producer>
  <playlist id="playlist0">
   <property name="kdenlive:audio_track">1</property>
+  <blank length="00:00:04.004"/>
+  <entry producer="producer2" in="00:00:00.000" out="00:00:01.401">
+   <property name="kdenlive:id">3</property>
+  </entry>
+  <entry producer="producer3" in="00:00:01.435" out="00:01:26.593">
+   <property name="kdenlive:id">3</property>
+  </entry>
  </playlist>
  <playlist id="playlist1">
   <property name="kdenlive:audio_track">1</property>
  </playlist>
- <tractor id="tractor0" in="00:00:00.000">
+ <tractor id="tractor0" in="00:00:00.000" out="00:01:30.597">
   <property name="kdenlive:audio_track">1</property>
   <property name="kdenlive:trackheight">69</property>
   <property name="kdenlive:timeline_active">1</property>
@@ -131,7 +229,7 @@
    <property name="disable">1</property>
   </filter>
  </tractor>
- <producer id="producer1" in="00:00:00.000" out="00:03:24.358">
+ <producer id="producer4" in="00:00:00.000" out="00:03:24.358">
   <property name="length">6125</property>
   <property name="eof">pause</property>
   <property name="resource">believer.ogg</property>
@@ -159,17 +257,50 @@
   <property name="set.test_audio">0</property>
   <property name="set.test_image">1</property>
  </producer>
+ <producer id="producer5" in="00:00:00.000" out="00:03:24.358">
+  <property name="length">6125</property>
+  <property name="eof">pause</property>
+  <property name="resource">believer.ogg</property>
+  <property name="meta.media.nb_streams">1</property>
+  <property name="meta.media.0.stream.type">audio</property>
+  <property name="meta.media.0.codec.sample_fmt">fltp</property>
+  <property name="meta.media.0.codec.sample_rate">48000</property>
+  <property name="meta.media.0.codec.channels">2</property>
+  <property name="meta.media.0.codec.name">vorbis</property>
+  <property name="meta.media.0.codec.long_name">Vorbis</property>
+  <property name="meta.media.0.codec.bit_rate">160000</property>
+  <property name="meta.attr.0.stream.language.markup">eng</property>
+  <property name="meta.attr.0.stream.encoder.markup">Lavc58.134.100 libvorbis</property>
+  <property name="seekable">1</property>
+  <property name="audio_index">0</property>
+  <property name="video_index">-1</property>
+  <property name="mute_on_pause">0</property>
+  <property name="mlt_service">avformat-novalidate</property>
+  <property name="kdenlive:clipname"/>
+  <property name="kdenlive:folderid">-1</property>
+  <property name="kdenlive:id">2</property>
+  <property name="kdenlive:file_size">3957780</property>
+  <property name="kdenlive:file_hash">cd4fe7c91c919d1efc01b0ee935472f3</property>
+  <property name="kdenlive:audio_max0">254</property>
+  <property name="kdenlive:clip_type">1</property>
+  <property name="xml">was here</property>
+  <property name="set.test_audio">1</property>
+  <property name="set.test_image">1</property>
+ </producer>
  <playlist id="playlist2">
   <property name="kdenlive:audio_track">1</property>
   <blank length="00:00:03.670"/>
-  <entry producer="producer1" in="00:00:00.033" out="00:03:24.358">
+  <entry producer="producer4" in="00:00:00.033" out="00:00:01.768">
+   <property name="kdenlive:id">2</property>
+  </entry>
+  <entry producer="producer5" in="00:00:01.802" out="00:00:02.069">
    <property name="kdenlive:id">2</property>
   </entry>
  </playlist>
  <playlist id="playlist3">
   <property name="kdenlive:audio_track">1</property>
  </playlist>
- <tractor id="tractor1" in="00:00:00.000" out="00:03:27.995">
+ <tractor id="tractor1" in="00:00:00.000" out="00:00:05.706">
   <property name="kdenlive:audio_track">1</property>
   <property name="kdenlive:trackheight">69</property>
   <property name="kdenlive:timeline_active">1</property>
@@ -220,7 +351,7 @@
   <track hide="audio" producer="playlist6"/>
   <track hide="audio" producer="playlist7"/>
  </tractor>
- <tractor id="tractor4" in="00:00:00.000" out="00:20:09.009">
+ <tractor id="tractor4" in="00:00:00.000" out="00:18:11.645">
   <track producer="black_track"/>
   <track producer="tractor0"/>
   <track producer="tractor1"/>
@@ -249,7 +380,7 @@
   <transition id="transition2">
    <property name="a_track">0</property>
    <property name="b_track">3</property>
-   <property name="version">0.9</property>
+   <property name="version">0.1</property>
    <property name="mlt_service">frei0r.cairoblend</property>
    <property name="kdenlive_id">frei0r.cairoblend</property>
    <property name="internal_added">237</property>
@@ -258,7 +389,7 @@
   <transition id="transition3">
    <property name="a_track">0</property>
    <property name="b_track">4</property>
-   <property name="version">0.9</property>
+   <property name="version">0.1</property>
    <property name="mlt_service">frei0r.cairoblend</property>
    <property name="kdenlive_id">frei0r.cairoblend</property>
    <property name="internal_added">237</property>
@@ -267,9 +398,10 @@
   <filter id="filter6">
    <property name="window">75</property>
    <property name="max_gain">20dB</property>
+   <property name="level">-12.3212</property>
    <property name="mlt_service">volume</property>
    <property name="internal_added">237</property>
-   <property name="disable">1</property>
+   <property name="disable">0</property>
   </filter>
   <filter id="filter7">
    <property name="channel">-1</property>

@@ -868,8 +868,7 @@ void Game::DrawSlider(Slider* slider)
 				y >= (slider->dataSlidingCircle->translateYPos + slider->dataSlidingCircle->center.y) - sqrt(CIRCLE_RADIUS * CIRCLE_RADIUS - pow(x - (slider->dataSlidingCircle->translateXPos + slider->dataSlidingCircle->center.x), 2));
 
 			if (in_circle)
-				slider->dataClickSlidingCircle->scaleFactor += CIRCLE_SHRINK_SPEED;
-			
+				slider->dataClickSlidingCircle->scaleFactor += CIRCLE_SHRINK_SPEED * 3.0f;
 		}
 	}
 	else if (slider->dataClickSlidingCircle->scaleFactor > 1.0f)
@@ -1044,13 +1043,13 @@ void Game::DrawMenu()
 
 	if (on_play && menu->scaleFactor < 1.1f)
 	{
-		menu->scaleFactor += CIRCLE_SHRINK_SPEED * 0.5f;
+		menu->scaleFactor += CIRCLE_SHRINK_SPEED;
 		menu->scaleMatrix = glm::scale(glm::vec3(menu->scaleFactor));
 		glUniformMatrix4fv(menu->scaleMatrixLoc, 1, GL_FALSE, glm::value_ptr(menu->scaleMatrix));
 	}
 	else if (menu->scaleFactor > 1.0f && !on_play)
 	{
-		menu->scaleFactor -= CIRCLE_SHRINK_SPEED * 0.5f;
+		menu->scaleFactor -= CIRCLE_SHRINK_SPEED;
 		menu->scaleMatrix = glm::scale(glm::vec3(menu->scaleFactor));
 		glUniformMatrix4fv(menu->scaleMatrixLoc, 1, GL_FALSE, glm::value_ptr(menu->scaleMatrix));
 	}
@@ -1116,7 +1115,7 @@ void Game::OnEvent(int key, int action, double x, double y)
 		if (on_play && action == GLFW_PRESS)
 		{
 			inMenu = false;
-			sound_engine->play2D("res/audio/believer - delay.ogg");
+			sound_engine->play2D("res/audio/believer - delay edited.ogg");
 			beatMap = new BeatMap(this, 124, 4);
 		}
 		return;
@@ -1124,6 +1123,9 @@ void Game::OnEvent(int key, int action, double x, double y)
 
 	// game
 	else if (key != GLFW_KEY_Z && key != GLFW_KEY_X && key != GLFW_MOUSE_BUTTON_1)
+		return;
+
+	if (entity_buffer.size() == 0)
 		return;
 
 	if (action == GLFW_PRESS)
