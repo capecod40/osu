@@ -339,11 +339,11 @@ DataSlider* Game::CreateDataSlider(const glm::vec3 startPos, const glm::vec3 end
 	glGenBuffers(1, &dataSlider->vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, dataSlider->vbo);
 
-	dataSlider->endIsLeftOfStart = dataSlider->endPos.x < dataSlider->center.x;
-	dataSlider->endIsUnderStart = dataSlider->endPos.y < dataSlider->center.y;
 	dataSlider->center = startPos;
 	dataSlider->endPos = endPos;
 	dataSlider->repeat = repeat;
+	dataSlider->endIsLeftOfStart = dataSlider->endPos.x < dataSlider->center.x;
+	dataSlider->endIsUnderStart = dataSlider->endPos.y < dataSlider->center.y;
 	dataSlider->slope = (endPos.y - startPos.y) / (endPos.x - startPos.x);
 	if (dataSlider->slope > 1.0f || dataSlider->slope < -1.0f)
 		dataSlider->useYAxis = true;
@@ -811,7 +811,7 @@ void Game::OnEventSlider(Slider*& slider, int key, int action, double x, double 
 	// to do: add in boundary
 	if (keyHold)
 	{
-		if (slider->dataClickSlidingCircle->scaleFactor < 2.0f)
+		if (slider->dataClickSlidingCircle->scaleFactor < 1.75f)
 			slider->dataClickSlidingCircle->scaleFactor += CIRCLE_SHRINK_SPEED;
 	}
 	else if (slider->dataClickSlidingCircle->scaleFactor > 1.0f)
@@ -841,7 +841,7 @@ void Game::DrawSlider(Slider* slider)
 	glDrawElements(GL_TRIANGLES, slider->dataSlider->indices.size(), GL_UNSIGNED_INT, (void*)0);
 
 	
-	// slider destruction, -1 for x cursor position means slider expired
+	// slider destruction
 	if (slider->dataClickSlidingCircle->repeatCounter > slider->dataSlider->repeat)
 	{
 		if (slider->score != SCORE::SUCCESS) // if success, no texture needed
@@ -861,7 +861,6 @@ void Game::DrawSlider(Slider* slider)
 	}
 
 	// slider shrink/expand on click
-	// to do: add in boundary
 	if (keyHold)
 	{
 		if (slider->dataClickSlidingCircle->scaleFactor < 1.75f)
@@ -1086,11 +1085,6 @@ void Game::Draw()
 
 	beatMap->Map();
 
-	if (entity_buffer.size() == 0)
-	{
-		return;
-	}
-
 	for (int i = entity_buffer.size() - 1; i >= 0; i--)
 	{
 		if (entity_buffer[i]->type == ENTITY_TYPE::BASIC)
@@ -1114,6 +1108,10 @@ void Game::Draw()
 
 void Game::OnEvent(int key, int action, double x, double y)
 {
+
+	if (key == GLFW_KEY_ESCAPE)
+		glfwSetWindowShouldClose(window, GLFW_TRUE);
+
 	// menu
 	if (inMenu)
 	{
@@ -1123,7 +1121,7 @@ void Game::OnEvent(int key, int action, double x, double y)
 		if (on_play && action == GLFW_PRESS)
 		{
 			inMenu = false;
-			sound_engine->play2D("res/audio/believer - delay edited.ogg");
+			//sound_engine->play2D("res/audio/believer - delay edited.ogg");
 			beatMap = new BeatMap(this, 124, 4);
 		}
 		return;
@@ -1136,7 +1134,9 @@ void Game::OnEvent(int key, int action, double x, double y)
 	if (entity_buffer.size() == 0)
 		return;
 
-	if (action == GLFW_PRESS)
+	if (action == GLFW_REPEAT)
+		return;
+	else if (action == GLFW_PRESS)
 		keyHold++;
 	else if (action == GLFW_RELEASE && keyHold > 0)
 		keyHold--;
