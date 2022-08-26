@@ -143,6 +143,7 @@ private:
 
 	GLFWwindow* window;
 	irrklang::ISoundEngine* sound_engine;
+	BeatMap* beatMap;
 
 	std::deque<Entity*> entity_buffer;
 	std::deque<DataTextureScore*> score_entity_buffer;
@@ -225,7 +226,7 @@ public:
 		glm::vec4 color_static_circle = glm::vec4(0.8f, 0.5f, 1.0f, 1.0f),
 		glm::vec4 color_center = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f), 
 		const float circle_init_size = 2.5f, 
-		const float circle_shrink_speed = 0.001f, 
+		const float circle_shrink_speed = 0.0003f, 
 		const float slider_speed = 0.1f, 
 		const int hold = 0, 
 		const bool menu = true);

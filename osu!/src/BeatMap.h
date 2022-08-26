@@ -3,7 +3,6 @@
 #include <glm/glm.hpp>
 #include "Game.h"
 
-
 class BeatMap
 {
 private:

@@ -568,39 +568,41 @@ DataMenu* Game::CreateDataMenu()
 	return dataMenu;
 }
 
-void Game::Draw()
-{
-	if (inMenu)
-	{
-		DrawMenu();
-		return;
-	}
-
-	if (entity_buffer.size() == 0)
-	{
-		return;
-	}
-
-	for (int i = entity_buffer.size() - 1; i >= 0; i--)
-	{
-		if (entity_buffer[i]->type == ENTITY_TYPE::BASIC)
-			DrawBasicCircle((BasicCircle*)entity_buffer[i]);
-		else if (entity_buffer[i]->type == ENTITY_TYPE::SLIDER)
-		{
-			DrawSlider((Slider*)entity_buffer[i]);
-		}
-		else
-		{
-			std::cout << "Unknown Entity" << std::endl;
-			__debugbreak();
-		}
-	}
-
-	for (int i = 0; i < score_entity_buffer.size(); i++)
-	{
-		DrawTextureScore(score_entity_buffer[i]);
-	}
-}
+//void Game::Draw()
+//{
+//	if (inMenu)
+//	{
+//		DrawMenu();
+//		return;
+//	}
+//
+//	if (entity_buffer.size() == 0)
+//	{
+//		return;
+//	}
+//
+//	beatMap->Map();
+//
+//	for (int i = entity_buffer.size() - 1; i >= 0; i--)
+//	{
+//		if (entity_buffer[i]->type == ENTITY_TYPE::BASIC)
+//			DrawBasicCircle((BasicCircle*)entity_buffer[i]);
+//		else if (entity_buffer[i]->type == ENTITY_TYPE::SLIDER)
+//		{
+//			DrawSlider((Slider*)entity_buffer[i]);
+//		}
+//		else
+//		{
+//			std::cout << "Unknown Entity" << std::endl;
+//			__debugbreak();
+//		}
+//	}
+//
+//	for (int i = 0; i < score_entity_buffer.size(); i++)
+//	{
+//		DrawTextureScore(score_entity_buffer[i]);
+//	}
+//}
 
 void Game::DrawBasicCircle(BasicCircle* circle)
 {
@@ -621,10 +623,9 @@ void Game::DrawBasicCircle(BasicCircle* circle)
 	}
 	else // destroy circle
 	{
-		if (entity_buffer.size() != 1)
+		if (entity_buffer.size() != 1 && entity_buffer[1]->type == ENTITY_TYPE::SLIDER)
 		{
-			if (entity_buffer[1]->type == ENTITY_TYPE::SLIDER)
-				((Slider*)entity_buffer[1])->score = SCORE::FAIL;
+			((Slider*)entity_buffer[1])->score = SCORE::FAIL;
 		}
 		else
 			score_entity_buffer.push_back(CreateDataTextureScore(circle->dataShrinkCircle->center, SCORE::FAIL));
@@ -698,7 +699,7 @@ void Game::OnEventBasicCircle(BasicCircle*& basicCircle, int key, int action, do
 		y >= circle->dataShrinkCircle->center.y - sqrt(CIRCLE_RADIUS * CIRCLE_RADIUS - pow(x - circle->dataShrinkCircle->center.x, 2));
 
 
-	if (entity_buffer[1]->type == ENTITY_TYPE::SLIDER) // for slider initial circles: sends score data to slider instead of drawing score texture
+	if (entity_buffer.size() > 1 && entity_buffer[1]->type == ENTITY_TYPE::SLIDER) // for slider initial circles: sends score data to slider instead of drawing score texture
 	{
 		if (!in_range) // if out of bounds, ignore input
 			return;
@@ -739,7 +740,7 @@ void Game::OnEventBasicCircle(BasicCircle*& basicCircle, int key, int action, do
 	{
 		if (!in_range) // if out of bounds, ignore input
 			return;
-		else if (!in_circle) // for follow, scores in circles aren't necessary. Push entity score buffer
+		else if (!in_circle)
 		{
 			score_entity_buffer.push_back(CreateDataTextureScore(circle->dataShrinkCircle->center, SCORE::FAIL));
 		}
@@ -1066,6 +1067,44 @@ void Game::DrawMenu()
 	glUseProgram(0);
 }
 
+#include "BeatMap.h" // circular dependency of BeatMap and Game
+
+void Game::Draw()
+{
+	if (inMenu)
+	{
+		DrawMenu();
+		return;
+	}
+
+	beatMap->Map();
+
+	if (entity_buffer.size() == 0)
+	{
+		return;
+	}
+
+	for (int i = entity_buffer.size() - 1; i >= 0; i--)
+	{
+		if (entity_buffer[i]->type == ENTITY_TYPE::BASIC)
+			DrawBasicCircle((BasicCircle*)entity_buffer[i]);
+		else if (entity_buffer[i]->type == ENTITY_TYPE::SLIDER)
+		{
+			DrawSlider((Slider*)entity_buffer[i]);
+		}
+		else
+		{
+			std::cout << "Unknown Entity" << std::endl;
+			__debugbreak();
+		}
+	}
+
+	for (int i = 0; i < score_entity_buffer.size(); i++)
+	{
+		DrawTextureScore(score_entity_buffer[i]);
+	}
+}
+
 void Game::OnEvent(int key, int action, double x, double y)
 {
 	// menu
@@ -1075,7 +1114,11 @@ void Game::OnEvent(int key, int action, double x, double y)
 			y <= menu->center.y + 125.0f && y >= menu->center.y - 125.0f;
 
 		if (on_play && action == GLFW_PRESS)
+		{
 			inMenu = false;
+			sound_engine->play2D("res/audio/believer - delay.ogg");
+			beatMap = new BeatMap(this, 124, 4);
+		}
 		return;
 	}
 
@@ -1088,6 +1131,8 @@ void Game::OnEvent(int key, int action, double x, double y)
 	else if (action == GLFW_RELEASE && keyHold > 0)
 		keyHold--;
 
+	if (entity_buffer.size() == 0 && action == GLFW_RELEASE) // crashes when clicking start button
+		return;
 
 	switch (entity_buffer[0]->type)
 	{

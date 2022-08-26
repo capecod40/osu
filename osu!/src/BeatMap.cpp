@@ -3,8 +3,6 @@
 BeatMap::BeatMap(Game* game, const double bpm, const int beatsPerBar)
 	:game(game), BPM(bpm), BEATS_PER_BAR(beatsPerBar), entity_tracker(0)
 {
-	game->sound_engine->play2D("res/audio/believer - delay.ogg");
-
 	glfwSetTime(0);
 }
 
@@ -43,19 +41,20 @@ void BeatMap::CurrentBeat(int& bar, double& beat) const // calculate beat offset
 {
 	double netMinutes = glfwGetTime() / 60.0; // for time delay, insert subtraction for sec / 60.0
 	double netBeats = netMinutes * BPM;
-	bar = netBeats / BEATS_PER_BAR + 1;
-	beat = netBeats - (bar - 1) * BEATS_PER_BAR + 1;
+	bar = netBeats / BEATS_PER_BAR;
+	beat = netBeats - (bar) * BEATS_PER_BAR + 1;
 }
 
 void BeatMap::Map()
 {
 	int tracker = 0;
 
-	AddEntity(tracker++, 1, 1, ENTITY_TYPE::SLIDER, glm::vec3(600.0f, 600.0f, 0.0f), 1, glm::vec3(1000.0f, 600.0f, 0.0f), 0);
+	//AddEntity(tracker++, 1, 1, ENTITY_TYPE::SLIDER, glm::vec3(600.0f, 600.0f, 0.0f), 1, glm::vec3(1000.0f, 600.0f, 0.0f), 0);
 
-	AddEntity(tracker++, 2, 4, ENTITY_TYPE::BASIC, glm::vec3(300.0f, 500.0f, 0.0f), 1);
-	AddEntity(tracker++, 2, 4.33, ENTITY_TYPE::BASIC, glm::vec3(400.0f, 400.0f, 0.0f), 2);
-	AddEntity(tracker++, 2, 4.66, ENTITY_TYPE::BASIC, glm::vec3(500.0f, 500.0f, 0.0f), 3);
+	AddEntity(tracker++, 1, 1, ENTITY_TYPE::BASIC, glm::vec3(200.0f, 400.0f, 0.0f), 1);
+	AddEntity(tracker++, 1, 2, ENTITY_TYPE::BASIC, glm::vec3(300.0f, 500.0f, 0.0f), 2);
+	AddEntity(tracker++, 1, 3, ENTITY_TYPE::BASIC, glm::vec3(400.0f, 400.0f, 0.0f), 3);
+	AddEntity(tracker++, 1, 4, ENTITY_TYPE::BASIC, glm::vec3(500.0f, 500.0f, 0.0f), 4);
 
 	//AddEntity(1, 3, ENTITY_TYPE::BASIC, glm::vec3(500.0f, 300.0f, 0.0f), 3, tracker++);
 	//AddEntity(1, 4, ENTITY_TYPE::BASIC, glm::vec3(600.0f, 300.0f, 0.0f), 4, tracker++);
