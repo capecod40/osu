@@ -807,16 +807,6 @@ void Game::OnEventSlider(Slider*& slider, int key, int action, double x, double 
 		return;
 	}
 
-	// slider shrink/expand on click
-	// to do: add in boundary
-	if (keyHold)
-	{
-		if (slider->dataClickSlidingCircle->scaleFactor < 1.75f)
-			slider->dataClickSlidingCircle->scaleFactor += CIRCLE_SHRINK_SPEED;
-	}
-	else if (slider->dataClickSlidingCircle->scaleFactor > 1.0f)
-		slider->dataClickSlidingCircle->scaleFactor -= CIRCLE_SHRINK_SPEED;
-
 	glBindVertexArray(slider->dataClickSlidingCircle->vao);
 	slider->dataClickSlidingCircle->shader.useProgram();
 
@@ -863,7 +853,7 @@ void Game::DrawSlider(Slider* slider)
 	// slider shrink/expand on click
 	if (keyHold)
 	{
-		if (slider->dataClickSlidingCircle->scaleFactor < 1.75f)
+		if (slider->dataClickSlidingCircle->scaleFactor < 1.5f)
 		{
 			double x, y;
 			glfwGetCursorPos(window, &x, &y);
@@ -897,7 +887,7 @@ void Game::DrawSlider(Slider* slider)
 
 
 	// draw moving base circle
-	if (entity_buffer[0]->type == ENTITY_TYPE::SLIDER) // after the inital circle is finished
+	if (((Slider*)entity_buffer[0])->dataSlider->vao == slider->dataSlider->vao) // after the inital circle is finished; ensures following sliders don't start drawing
 	{
 		// base circle draw
 		glBindVertexArray(slider->dataSlidingCircle->vao);
@@ -1048,13 +1038,13 @@ void Game::DrawMenu()
 
 	if (on_play && menu->scaleFactor < 1.1f)
 	{
-		menu->scaleFactor += CIRCLE_SHRINK_SPEED;
+		menu->scaleFactor += CIRCLE_SHRINK_SPEED * 4.0f;
 		menu->scaleMatrix = glm::scale(glm::vec3(menu->scaleFactor));
 		glUniformMatrix4fv(menu->scaleMatrixLoc, 1, GL_FALSE, glm::value_ptr(menu->scaleMatrix));
 	}
 	else if (menu->scaleFactor > 1.0f && !on_play)
 	{
-		menu->scaleFactor -= CIRCLE_SHRINK_SPEED;
+		menu->scaleFactor -= CIRCLE_SHRINK_SPEED * 4.0f;
 		menu->scaleMatrix = glm::scale(glm::vec3(menu->scaleFactor));
 		glUniformMatrix4fv(menu->scaleMatrixLoc, 1, GL_FALSE, glm::value_ptr(menu->scaleMatrix));
 	}
