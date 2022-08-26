@@ -18,6 +18,17 @@
 #define SCREEN_WIDTH 1920.0f
 #define SCREEN_HEIGHT 1080.0f
 
+
+
+#ifdef LAPTOP
+#define PLATFORM_SHRINK_SPEED 0.0003f
+#define PLATFORM_SLIDER_SPEED 0.1f
+#else
+#define PLATFORM_SHRINK_SPEED 0.03f
+#define PLATFORM_SLIDER_SPEED 0.5f
+#endif
+
+
 enum class ENTITY_TYPE
 {
 	BASIC = 0, SLIDER = 1, SPINNER = 2
@@ -226,8 +237,8 @@ public:
 		glm::vec4 color_static_circle = glm::vec4(0.8f, 0.5f, 1.0f, 1.0f),
 		glm::vec4 color_center = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f), 
 		const float circle_init_size = 2.5f, 
-		const float circle_shrink_speed = 0.0003f, 
-		const float slider_speed = 0.1f, 
+		const float circle_shrink_speed = PLATFORM_SHRINK_SPEED,
+		const float slider_speed = PLATFORM_SLIDER_SPEED,
 		const int hold = 0, 
 		const bool menu = true);
 	~Game();

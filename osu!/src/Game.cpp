@@ -1048,7 +1048,7 @@ void Game::DrawMenu()
 		menu->scaleMatrix = glm::scale(glm::vec3(menu->scaleFactor));
 		glUniformMatrix4fv(menu->scaleMatrixLoc, 1, GL_FALSE, glm::value_ptr(menu->scaleMatrix));
 	}
-	else if (menu->scaleFactor > 1.0f)
+	else if (menu->scaleFactor > 1.0f && !on_play)
 	{
 		menu->scaleFactor -= CIRCLE_SHRINK_SPEED * 0.5f;
 		menu->scaleMatrix = glm::scale(glm::vec3(menu->scaleFactor));
