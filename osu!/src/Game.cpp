@@ -680,6 +680,7 @@ void Game::OnEventBasicCircle(BasicCircle*& basicCircle, int key, int action, do
 		else if (!in_circle) 
 		{
 			((Slider*)entity_buffer[1])->score = SCORE::FAIL;
+			sound_engine->play2D("res/audio/break_sound/break_sound_edited.ogg");
 		}
 		else if (circle->dataShrinkCircle->shrinkFactor < 1.2f && circle->dataShrinkCircle->shrinkFactor > 1.0f)
 		{
@@ -712,6 +713,7 @@ void Game::OnEventBasicCircle(BasicCircle*& basicCircle, int key, int action, do
 		else
 		{
 			((Slider*)entity_buffer[1])->score = SCORE::FAIL;
+			sound_engine->play2D("res/audio/break_sound/break_sound_edited.ogg");
 		}
 	}
 
@@ -770,14 +772,14 @@ void Game::OnEventSlider(Slider*& slider, int key, int action, double x, double 
 	// slider destruction, -1 for x cursor position means slider expired
 	if (slider->dataClickSlidingCircle->repeatCounter > slider->dataSlider->repeat || x == -1)
 	{
-		if (slider->score != SCORE::SUCCESS) // if success, no texture needed
+		if (slider->score != SCORE::SUCCESS)
 		{
 			if (slider->dataSlider->repeat % 2 == 0)
 				score_entity_buffer.push_back(CreateDataTextureScore(slider->dataSlider->endPos, slider->score));
 			else
 				score_entity_buffer.push_back(CreateDataTextureScore(slider->dataSlider->center, slider->score));
-			sound_engine->play2D("res/audio/break_sound/break_sound_edited.ogg");
 		}
+
 		sound_engine->play2D("res/audio/hit_sound/hit_sound_edited.ogg");
 
 		delete slider->dataSlider;
