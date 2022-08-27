@@ -684,24 +684,29 @@ void Game::OnEventBasicCircle(BasicCircle*& basicCircle, int key, int action, do
 		else if (circle->dataShrinkCircle->shrinkFactor < 1.2f && circle->dataShrinkCircle->shrinkFactor > 1.0f)
 		{
 			((Slider*)entity_buffer[1])->score = SCORE::SUCCESS;
+			sound_engine->play2D("res/audio/hit_sound/hit_sound_edited.ogg");
 		}
 
 		else if (circle->dataShrinkCircle->shrinkFactor < 1.4f && circle->dataShrinkCircle->shrinkFactor > 1.2f)
 		{
 			((Slider*)entity_buffer[1])->score = SCORE::HUNDRED;
+			sound_engine->play2D("res/audio/hit_sound/hit_sound_edited.ogg");
 		}
 		else if (circle->dataShrinkCircle->shrinkFactor < 1.0f && circle->dataShrinkCircle->shrinkFactor > 0.8f)
 		{
 			((Slider*)entity_buffer[1])->score = SCORE::HUNDRED;
+			sound_engine->play2D("res/audio/hit_sound/hit_sound_edited.ogg");
 		}
 
 		else if (circle->dataShrinkCircle->shrinkFactor < 1.6 && circle->dataShrinkCircle->shrinkFactor > 1.4f)
 		{
 			((Slider*)entity_buffer[1])->score = SCORE::FIFTY;
+			sound_engine->play2D("res/audio/hit_sound/hit_sound_edited.ogg");
 		}
 		else if (circle->dataShrinkCircle->shrinkFactor < 0.8f && circle->dataShrinkCircle->shrinkFactor > 0.6f)
 		{
 			((Slider*)entity_buffer[1])->score = SCORE::FIFTY;
+			sound_engine->play2D("res/audio/hit_sound/hit_sound_edited.ogg");
 		}
 
 		else
@@ -717,33 +722,39 @@ void Game::OnEventBasicCircle(BasicCircle*& basicCircle, int key, int action, do
 		else if (!in_circle)
 		{
 			score_entity_buffer.push_back(CreateDataTextureScore(circle->dataShrinkCircle->center, SCORE::FAIL));
+			sound_engine->play2D("res/audio/break_sound/break_sound_edited.ogg");
 		}
-		else if (circle->dataShrinkCircle->shrinkFactor < 1.2f && circle->dataShrinkCircle->shrinkFactor > 1.0f)
+		else if (circle->dataShrinkCircle->shrinkFactor < 1.2f && circle->dataShrinkCircle->shrinkFactor > 1.0f) // success
 		{
-			// success
+			sound_engine->play2D("res/audio/hit_sound/hit_sound_edited.ogg");
 		}
 
 		else if (circle->dataShrinkCircle->shrinkFactor < 1.4f && circle->dataShrinkCircle->shrinkFactor > 1.2f)
 		{
 			score_entity_buffer.push_back(CreateDataTextureScore(circle->dataShrinkCircle->center, SCORE::HUNDRED));
+			sound_engine->play2D("res/audio/hit_sound/hit_sound_edited.ogg");
 		}
 		else if (circle->dataShrinkCircle->shrinkFactor < 1.0f && circle->dataShrinkCircle->shrinkFactor > 0.8f)
 		{
 			score_entity_buffer.push_back(CreateDataTextureScore(circle->dataShrinkCircle->center, SCORE::HUNDRED));
+			sound_engine->play2D("res/audio/hit_sound/hit_sound_edited.ogg");
 		}
 
 		else if (circle->dataShrinkCircle->shrinkFactor < 1.6 && circle->dataShrinkCircle->shrinkFactor > 1.4f)
 		{
 			score_entity_buffer.push_back(CreateDataTextureScore(circle->dataShrinkCircle->center, SCORE::FIFTY));
+			sound_engine->play2D("res/audio/hit_sound/hit_sound_edited.ogg");
 		}
 		else if (circle->dataShrinkCircle->shrinkFactor < 0.8f && circle->dataShrinkCircle->shrinkFactor > 0.6f)
 		{
 			score_entity_buffer.push_back(CreateDataTextureScore(circle->dataShrinkCircle->center, SCORE::FIFTY));
+			sound_engine->play2D("res/audio/hit_sound/hit_sound_edited.ogg");
 		}
 
 		else
 		{
 			score_entity_buffer.push_back(CreateDataTextureScore(circle->dataShrinkCircle->center, SCORE::FAIL));
+			sound_engine->play2D("res/audio/break_sound/break_sound_edited.ogg");
 		}
 	}
 
@@ -765,7 +776,9 @@ void Game::OnEventSlider(Slider*& slider, int key, int action, double x, double 
 				score_entity_buffer.push_back(CreateDataTextureScore(slider->dataSlider->endPos, slider->score));
 			else
 				score_entity_buffer.push_back(CreateDataTextureScore(slider->dataSlider->center, slider->score));
+			sound_engine->play2D("res/audio/break_sound/break_sound_edited.ogg");
 		}
+		sound_engine->play2D("res/audio/hit_sound/hit_sound_edited.ogg");
 
 		delete slider->dataSlider;
 		delete slider->dataSlidingCircle;
@@ -1079,7 +1092,7 @@ void Game::OnEvent(int key, int action, double x, double y)
 		if (on_play && action == GLFW_PRESS)
 		{
 			inMenu = false;
-			sound_engine->play2D("res/audio/believer/believer - delay edited.ogg");
+			sound_engine->play2D("res/audio/believer/believer_delay_edited.ogg");
 			beatMap = new BeatMap(this, BPM, BEATS_PER_BAR);
 		}
 		return;
@@ -1095,7 +1108,9 @@ void Game::OnEvent(int key, int action, double x, double y)
 	if (action == GLFW_REPEAT)
 		return;
 	else if (action == GLFW_PRESS)
+	{
 		keyHold++;
+	}
 	else if (action == GLFW_RELEASE && keyHold > 0)
 		keyHold--;
 
