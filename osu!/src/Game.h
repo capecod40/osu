@@ -27,7 +27,7 @@
 #define PLATFORM_SHRINK_SPEED 0.0003f
 #define PLATFORM_SLIDER_SPEED 0.1f
 #else
-#define PLATFORM_SHRINK_SPEED 0.01f
+#define PLATFORM_SHRINK_SPEED 0.011f
 #define PLATFORM_SLIDER_SPEED 4.0f
 #endif
 
@@ -158,6 +158,8 @@ private:
 	GLFWwindow* window;
 	irrklang::ISoundEngine* sound_engine;
 	BeatMap* beatMap;
+	const double BPM;
+	const int BEATS_PER_BAR;
 
 	std::deque<Entity*> entity_buffer;
 	std::deque<DataTextureScore*> score_entity_buffer;
@@ -232,6 +234,8 @@ private:
 
 public:
 	Game(GLFWwindow* win, 
+		const double bpm, 
+		const int beatsPerBar, 
 		const float circleInnerRadius = 20.0f,
 		const float circleRadius = 60.0f,
 		const float circleOuterRadius = 70.0f,

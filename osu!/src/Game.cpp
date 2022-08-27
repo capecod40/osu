@@ -4,6 +4,8 @@
 #include "stb_image.h"
 
 Game::Game(GLFWwindow* win, 
+	const double bpm, 
+	const int beatsPerBar, 
 	const float circleInnerRadius /*= 20.0f*/,
 	const float circleRadius /*= 60.0f*/,
 	const float circleOuterRadius /*= 70.0f*/,
@@ -18,6 +20,8 @@ Game::Game(GLFWwindow* win,
 	const int hold /*= false*/, 
 	const bool menu /*= false*/)
 	: window(win),
+	BPM(bpm), 
+	BEATS_PER_BAR(beatsPerBar), 
 	CIRCLE_INNER_RADIUS(circleInnerRadius),
 	CIRCLE_RADIUS(circleRadius), 
 	CIRCLE_OUTER_RADIUS(circleOuterRadius),
@@ -574,42 +578,6 @@ DataMenu* Game::CreateDataMenu()
 	return dataMenu;
 }
 
-//void Game::Draw()
-//{
-//	if (inMenu)
-//	{
-//		DrawMenu();
-//		return;
-//	}
-//
-//	if (entity_buffer.size() == 0)
-//	{
-//		return;
-//	}
-//
-//	beatMap->Map();
-//
-//	for (int i = entity_buffer.size() - 1; i >= 0; i--)
-//	{
-//		if (entity_buffer[i]->type == ENTITY_TYPE::BASIC)
-//			DrawBasicCircle((BasicCircle*)entity_buffer[i]);
-//		else if (entity_buffer[i]->type == ENTITY_TYPE::SLIDER)
-//		{
-//			DrawSlider((Slider*)entity_buffer[i]);
-//		}
-//		else
-//		{
-//			std::cout << "Unknown Entity" << std::endl;
-//			__debugbreak();
-//		}
-//	}
-//
-//	for (int i = 0; i < score_entity_buffer.size(); i++)
-//	{
-//		DrawTextureScore(score_entity_buffer[i]);
-//	}
-//}
-
 void Game::DrawBasicCircle(BasicCircle* circle)
 {
 	// shrink circle
@@ -1111,8 +1079,8 @@ void Game::OnEvent(int key, int action, double x, double y)
 		if (on_play && action == GLFW_PRESS)
 		{
 			inMenu = false;
-			//sound_engine->play2D("res/audio/believer - delay edited.ogg");
-			beatMap = new BeatMap(this, 124, 4);
+			sound_engine->play2D("res/audio/believer - delay edited.ogg");
+			beatMap = new BeatMap(this, BPM, BEATS_PER_BAR);
 		}
 		return;
 	}

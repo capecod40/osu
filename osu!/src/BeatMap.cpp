@@ -39,10 +39,10 @@ void BeatMap::AddEntity(int tracker,
 
 void BeatMap::CurrentBeat(int& bar, double& beat) const // calculate beat offset from circle shrink speed
 {
-	double netMinutes = glfwGetTime() / 60.0; // for time delay, insert subtraction for sec / 60.0
+	double netMinutes = glfwGetTime() / 60.0;
 	double netBeats = netMinutes * BPM;
 	bar = netBeats / BEATS_PER_BAR;
-	beat = netBeats - (bar) * BEATS_PER_BAR + 1;
+	beat = netBeats - bar * BEATS_PER_BAR + 1;
 }
 
 void BeatMap::Map() // sliders cannot be perfectly vertical; offset ending x coords by at least one
@@ -74,29 +74,29 @@ void BeatMap::Map() // sliders cannot be perfectly vertical; offset ending x coo
 	AddEntity(tracker++, 6, 3, ENTITY_TYPE::BASIC, glm::vec3(SCREEN_CENTER_X + 70.0f, SCREEN_CENTER_Y + 70.0f, 0.0f), 2);
 	AddEntity(tracker++, 6, 4, ENTITY_TYPE::BASIC, glm::vec3(SCREEN_CENTER, 0.0f), 3);
 
-	// (Inside my) head oh oooo
+	// (Inside my) head I'm fired up
 	AddEntity(tracker++, 7, 1, ENTITY_TYPE::BASIC, glm::vec3(1400.0f, 800.0f, 0.0f), 1);
-	AddEntity(tracker++, 7, 1.33, ENTITY_TYPE::BASIC, glm::vec3(1350.0f, 800.0f, 0.0f), 2);
-	AddEntity(tracker++, 7, 1.66, ENTITY_TYPE::BASIC, glm::vec3(1300.0f, 800.0f, 0.0f), 3);
-						
+	AddEntity(tracker++, 7, 2, ENTITY_TYPE::BASIC, glm::vec3(1350.0f, 800.0f, 0.0f), 2);
 	AddEntity(tracker++, 7, 3, ENTITY_TYPE::SLIDER, glm::vec3(1250.0f, 800.0f, 0.0f), 4, glm::vec3(1050.0f, 900.0f, 0.0f), 0);
 
 	AddEntity(tracker++, 8, 2.9, ENTITY_TYPE::BASIC, glm::vec3(1400.0f, 400.0f, 0.0f), 1);
 	AddEntity(tracker++, 8, 3, ENTITY_TYPE::BASIC, glm::vec3(1400.0f, 350.0f, 0.0f), 2);
 	AddEntity(tracker++, 8, 3.9, ENTITY_TYPE::BASIC, glm::vec3(1300.0f, 400.0f, 0.0f), 3);
 	AddEntity(tracker++, 8, 4, ENTITY_TYPE::BASIC, glm::vec3(1300.0f, 350.0f, 0.0f), 4);
-	AddEntity(tracker++, 8, 4.9, ENTITY_TYPE::BASIC, glm::vec3(1200.0f, 400.0f, 0.0f), 1);
 
 	AddEntity(tracker++, 9, 1, ENTITY_TYPE::BASIC, glm::vec3(1200.0f, 350.0f, 0.0f), 2);
 	AddEntity(tracker++, 9, 2, ENTITY_TYPE::BASIC, glm::vec3(1200.0f, 500.0f, 0.0f), 3);
 
-	AddEntity(tracker++, 9, 3, ENTITY_TYPE::SLIDER, glm::vec3(1200.0f, 600.0f, 0.0f), 4, glm::vec3(1050.0f, 300.0f, 0.0f), 1);
+	AddEntity(tracker++, 9, 3, ENTITY_TYPE::SLIDER, glm::vec3(1200.0f, 600.0f, 0.0f), 4, glm::vec3(1100.0f, 500.0f, 0.0f), 1);
 
-	AddEntity(tracker++, 11, 2.9, ENTITY_TYPE::BASIC, glm::vec3(1400.0f, 400.0f, 0.0f), 1);
-	AddEntity(tracker++, 11, 3, ENTITY_TYPE::BASIC, glm::vec3(1400.0f, 350.0f, 0.0f), 2);
-	AddEntity(tracker++, 11, 3.9, ENTITY_TYPE::BASIC, glm::vec3(1300.0f, 400.0f, 0.0f), 3);
-	AddEntity(tracker++, 11, 4, ENTITY_TYPE::BASIC, glm::vec3(1300.0f, 350.0f, 0.0f), 4);
-	AddEntity(tracker++, 11, 4.9, ENTITY_TYPE::BASIC, glm::vec3(1200.0f, 400.0f, 0.0f), 1);
+	AddEntity(tracker++, 10, 2.9, ENTITY_TYPE::BASIC, glm::vec3(1400.0f, 400.0f, 0.0f), 1);
+	AddEntity(tracker++, 10, 3, ENTITY_TYPE::BASIC, glm::vec3(1400.0f, 350.0f, 0.0f), 2);
+	AddEntity(tracker++, 10, 3.9, ENTITY_TYPE::BASIC, glm::vec3(1300.0f, 400.0f, 0.0f), 3);
+	AddEntity(tracker++, 10, 4, ENTITY_TYPE::BASIC, glm::vec3(1300.0f, 350.0f, 0.0f), 4);
+	AddEntity(tracker++, 10, 4.9, ENTITY_TYPE::BASIC, glm::vec3(1200.0f, 400.0f, 0.0f), 1);
+
+	AddEntity(tracker++, 11, 1, ENTITY_TYPE::BASIC, glm::vec3(1200.0f, 350.0f, 0.0f), 2);
+	AddEntity(tracker++, 11, 2, ENTITY_TYPE::BASIC, glm::vec3(1200.0f, 500.0f, 0.0f), 3);
 
 }
 
