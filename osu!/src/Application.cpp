@@ -120,9 +120,9 @@ int main()
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // wire
 
-	Game* game = new Game(window, 125, 4);
+	Game* game = new Game(window, 124.5, 4);
 
-	glfwSetWindowUserPointer(window, game); // do research: static cast
+	glfwSetWindowUserPointer(window, game);
 
 	glfwSetKeyCallback(window, game->KeyboardInput);
 	glfwSetMouseButtonCallback(window, game->MouseInput);
