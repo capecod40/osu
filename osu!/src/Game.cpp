@@ -1079,7 +1079,7 @@ void Game::OnEvent(int key, int action, double x, double y)
 		if (on_play && action == GLFW_PRESS)
 		{
 			inMenu = false;
-			sound_engine->play2D("res/audio/believer - delay edited.ogg");
+			sound_engine->play2D("res/audio/believer/believer - delay edited.ogg");
 			beatMap = new BeatMap(this, BPM, BEATS_PER_BAR);
 		}
 		return;
