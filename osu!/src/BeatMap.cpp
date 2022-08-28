@@ -37,12 +37,6 @@ void BeatMap::AddEntity(int tracker,
 		}
 	}
 
-	if (currentBar == 47)
-	{
-		game->inMenu = true;
-		delete this;
-	}
-
 }
 
 void BeatMap::CurrentBeat(int& bar, double& beat) const // calculate beat offset from circle shrink speed
@@ -56,6 +50,17 @@ void BeatMap::CurrentBeat(int& bar, double& beat) const // calculate beat offset
 void BeatMap::Map() // sliders cannot be perfectly vertical; offset ending x coords by at least one
 {
 	int tracker = 0;
+
+	int currentBar;
+	double currentBeat;
+	CurrentBeat(currentBar, currentBeat);
+
+	if (currentBar == 47)
+	{
+		game->inMenu = true;
+		delete this;
+		return;
+	}
  
 	AddEntity(tracker++, 1, 1, ENTITY_TYPE::BASIC, glm::vec3(800.0f, 400.0f, 0.0f), 1);
 	AddEntity(tracker++, 1, 2, ENTITY_TYPE::BASIC, glm::vec3(900.0f, 500.0f, 0.0f), 2);
