@@ -26,7 +26,7 @@ private:
 	void CurrentBeat(int& bar, double& beat) const;
 
 public:
-	BeatMap(Game* game, const double = 60, const int beatsPerBar = 4);
+	BeatMap(Game* game, const double bpm, const int beatsPerBar);
 
 	void Map();
 	

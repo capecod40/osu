@@ -4,6 +4,8 @@
 #include "stb_image.h"
 
 Game::Game(GLFWwindow* win, 
+	const double bpm, 
+	const int beatsPerBar, 
 	const float circleInnerRadius /*= 20.0f*/,
 	const float circleRadius /*= 60.0f*/,
 	const float circleOuterRadius /*= 70.0f*/,
@@ -18,6 +20,8 @@ Game::Game(GLFWwindow* win,
 	const int hold /*= false*/, 
 	const bool menu /*= false*/)
 	: window(win),
+	BPM(bpm), 
+	BEATS_PER_BAR(beatsPerBar), 
 	CIRCLE_INNER_RADIUS(circleInnerRadius),
 	CIRCLE_RADIUS(circleRadius), 
 	CIRCLE_OUTER_RADIUS(circleOuterRadius),
@@ -37,6 +41,34 @@ Game::Game(GLFWwindow* win,
 	stbi_set_flip_vertically_on_load(true);
 	orthoMatrix = glm::ortho(0.0f, 1920.0f, 0.0f, 1080.0f);
 	this->menu = CreateDataMenu();
+	this->menu_logo = CreateDataTextureCircle(glm::vec3(SCREEN_WIDTH / 2.0f, SCREEN_HEIGHT * 0.88f, 0.0f), -1);
+
+	int x, y, n;
+    unsigned char* imageData = stbi_load("res/textures/cursor/cursor.png", &x, &y, &n, 0);
+
+	if (!imageData)
+	{
+		std::cout << "Failed to load cursor image!" << std::endl;
+		__debugbreak();
+	}
+
+	GLFWimage image;
+	image.width = x;
+	image.height = y;
+	image.pixels = imageData;
+
+	GLFWcursor* cursor = glfwCreateCursor(&image, 25, 25);
+
+	if (cursor == NULL)
+	{
+		std::cout << "Failed to load cursor!" << std::endl;
+		__debugbreak();
+	}
+
+	stbi_image_free(imageData);
+
+	glfwSetCursor(window, cursor);
+
 }
 
 Game::~Game()
@@ -163,7 +195,7 @@ DataStaticCircle* Game::CreateDataStaticCircle(const glm::vec3 center)
 	return dataStaticCircle;
 }
 
-DataTextureCircle* Game::CreateDataTextureCircle(const glm::vec3 center, const int index)
+DataTextureCircle* Game::CreateDataTextureCircle(const glm::vec3 center, const int index, const glm::vec3 endPos)
 {
 	DataTextureCircle* dataTextureCircle = new DataTextureCircle();
 
@@ -176,8 +208,45 @@ DataTextureCircle* Game::CreateDataTextureCircle(const glm::vec3 center, const i
 	dataTextureCircle->index = index;
 	dataTextureCircle->center = center;
 
+	if (index == -1) // menu logo
+		GenDataTexture(dataTextureCircle->points, dataTextureCircle->indices, dataTextureCircle->center, SCREEN_HEIGHT * 0.10f, SCREEN_HEIGHT * 0.10f);
+	else if (index == 0) // reverse arrow
+		GenDataTexture(dataTextureCircle->points, dataTextureCircle->indices, glm::vec3(0.0f, 0.0f, 0.0f), 20.0f, 20.0f);
+	else
+		GenDataTexture(dataTextureCircle->points, dataTextureCircle->indices, dataTextureCircle->center, 20.0f, 24.0f);
 
-	GenDataTexture(dataTextureCircle->points, dataTextureCircle->indices, dataTextureCircle->center /* default texture dimensions */);
+	if (index == 0) // reverse arrow
+	{
+		bool endIsLeftOfStart = endPos.x < center.x;
+
+		double x = endPos.x - center.x;
+		double y = endPos.y - center.y;
+		double startAngle = atan(y / x);
+
+		if (endIsLeftOfStart)
+			startAngle += M_PI;
+
+		double endAngle = startAngle - M_PI;
+
+		for (int i = 0; i < dataTextureCircle->points.size(); i += 5)
+		{
+			glm::vec4 tmpStart = glm::vec4(dataTextureCircle->points[i],
+				dataTextureCircle->points[i + 1],
+				dataTextureCircle->points[i + 2],
+				1.0f);
+
+			glm::mat4 rotateStart = glm::rotate((float)startAngle, glm::vec3(0.0f, 0.0f, 1.0f));
+
+			glm::mat4 translateStart = glm::translate(center);
+
+
+			tmpStart = translateStart * rotateStart  * tmpStart;
+
+			dataTextureCircle->points[i] = tmpStart.x;
+			dataTextureCircle->points[i + 1] = tmpStart.y;
+			dataTextureCircle->points[i + 2] = tmpStart.z;
+		}
+	}
 	
 	ASSERT(glBufferData(GL_ARRAY_BUFFER, dataTextureCircle->points.size() * sizeof(float), &dataTextureCircle->points[0], GL_STATIC_DRAW));
 	ASSERT(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0));
@@ -199,6 +268,12 @@ DataTextureCircle* Game::CreateDataTextureCircle(const glm::vec3 center, const i
 	std::string texturePath;
 	switch (index)
 	{
+		case -1:
+			texturePath = "res/textures/credits/menu_logo.png";
+			break;
+		case 0:
+			texturePath = "res/textures/reverse_arrow/reverse_arrow.png";
+			break;
 		case 1:
 			texturePath = "res/textures/numbers/1.png";
 			break;
@@ -250,7 +325,10 @@ DataTextureScore* Game::CreateDataTextureScore(const glm::vec3 center, SCORE sco
 	glBindBuffer(GL_ARRAY_BUFFER, dataTextureScore->vbo);
 
 	dataTextureScore->center = center;
-	GenDataTexture(dataTextureScore->points, dataTextureScore->indices, center, 20.0f, 10.0f);
+	if (score == SCORE::HUNDRED)
+		GenDataTexture(dataTextureScore->points, dataTextureScore->indices, center, 30.0f, 25.0f);
+	else
+		GenDataTexture(dataTextureScore->points, dataTextureScore->indices, center, 25.0f, 25.0f);
 
 	glBufferData(GL_ARRAY_BUFFER, dataTextureScore->points.size() * sizeof(float), &dataTextureScore->points[0], GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
@@ -333,11 +411,11 @@ DataSlider* Game::CreateDataSlider(const glm::vec3 startPos, const glm::vec3 end
 	glGenBuffers(1, &dataSlider->vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, dataSlider->vbo);
 
-	dataSlider->endIsLeftOfStart = dataSlider->endPos.x < dataSlider->center.x;
-	dataSlider->endIsUnderStart = dataSlider->endPos.y < dataSlider->center.y;
 	dataSlider->center = startPos;
 	dataSlider->endPos = endPos;
 	dataSlider->repeat = repeat;
+	dataSlider->endIsLeftOfStart = dataSlider->endPos.x < dataSlider->center.x;
+	dataSlider->endIsUnderStart = dataSlider->endPos.y < dataSlider->center.y;
 	dataSlider->slope = (endPos.y - startPos.y) / (endPos.x - startPos.x);
 	if (dataSlider->slope > 1.0f || dataSlider->slope < -1.0f)
 		dataSlider->useYAxis = true;
@@ -373,6 +451,10 @@ DataSlider* Game::CreateDataSlider(const glm::vec3 startPos, const glm::vec3 end
 	int uniformLocation = glGetUniformLocation(dataSlider->shader.getProgramID(), "orthoMatrix");
 	glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(orthoMatrix));
 
+	// reverse arrow
+	dataSlider->dataReverseArrowStart = CreateDataTextureCircle(startPos, 0, endPos);
+	dataSlider->dataReverseArrowEnd = CreateDataTextureCircle(endPos, 0, startPos);
+	
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -568,42 +650,6 @@ DataMenu* Game::CreateDataMenu()
 	return dataMenu;
 }
 
-//void Game::Draw()
-//{
-//	if (inMenu)
-//	{
-//		DrawMenu();
-//		return;
-//	}
-//
-//	if (entity_buffer.size() == 0)
-//	{
-//		return;
-//	}
-//
-//	beatMap->Map();
-//
-//	for (int i = entity_buffer.size() - 1; i >= 0; i--)
-//	{
-//		if (entity_buffer[i]->type == ENTITY_TYPE::BASIC)
-//			DrawBasicCircle((BasicCircle*)entity_buffer[i]);
-//		else if (entity_buffer[i]->type == ENTITY_TYPE::SLIDER)
-//		{
-//			DrawSlider((Slider*)entity_buffer[i]);
-//		}
-//		else
-//		{
-//			std::cout << "Unknown Entity" << std::endl;
-//			__debugbreak();
-//		}
-//	}
-//
-//	for (int i = 0; i < score_entity_buffer.size(); i++)
-//	{
-//		DrawTextureScore(score_entity_buffer[i]);
-//	}
-//}
-
 void Game::DrawBasicCircle(BasicCircle* circle)
 {
 	// shrink circle
@@ -706,33 +752,40 @@ void Game::OnEventBasicCircle(BasicCircle*& basicCircle, int key, int action, do
 		else if (!in_circle) 
 		{
 			((Slider*)entity_buffer[1])->score = SCORE::FAIL;
+			sound_engine->play2D("res/audio/break_sound/break_sound_edited.ogg");
 		}
 		else if (circle->dataShrinkCircle->shrinkFactor < 1.2f && circle->dataShrinkCircle->shrinkFactor > 1.0f)
 		{
 			((Slider*)entity_buffer[1])->score = SCORE::SUCCESS;
+			sound_engine->play2D("res/audio/hit_sound/hit_sound_edited.ogg");
 		}
 
 		else if (circle->dataShrinkCircle->shrinkFactor < 1.4f && circle->dataShrinkCircle->shrinkFactor > 1.2f)
 		{
 			((Slider*)entity_buffer[1])->score = SCORE::HUNDRED;
+			sound_engine->play2D("res/audio/hit_sound/hit_sound_edited.ogg");
 		}
 		else if (circle->dataShrinkCircle->shrinkFactor < 1.0f && circle->dataShrinkCircle->shrinkFactor > 0.8f)
 		{
 			((Slider*)entity_buffer[1])->score = SCORE::HUNDRED;
+			sound_engine->play2D("res/audio/hit_sound/hit_sound_edited.ogg");
 		}
 
 		else if (circle->dataShrinkCircle->shrinkFactor < 1.6 && circle->dataShrinkCircle->shrinkFactor > 1.4f)
 		{
 			((Slider*)entity_buffer[1])->score = SCORE::FIFTY;
+			sound_engine->play2D("res/audio/hit_sound/hit_sound_edited.ogg");
 		}
 		else if (circle->dataShrinkCircle->shrinkFactor < 0.8f && circle->dataShrinkCircle->shrinkFactor > 0.6f)
 		{
 			((Slider*)entity_buffer[1])->score = SCORE::FIFTY;
+			sound_engine->play2D("res/audio/hit_sound/hit_sound_edited.ogg");
 		}
 
 		else
 		{
 			((Slider*)entity_buffer[1])->score = SCORE::FAIL;
+			sound_engine->play2D("res/audio/break_sound/break_sound_edited.ogg");
 		}
 	}
 
@@ -743,33 +796,39 @@ void Game::OnEventBasicCircle(BasicCircle*& basicCircle, int key, int action, do
 		else if (!in_circle)
 		{
 			score_entity_buffer.push_back(CreateDataTextureScore(circle->dataShrinkCircle->center, SCORE::FAIL));
+			sound_engine->play2D("res/audio/break_sound/break_sound_edited.ogg");
 		}
-		else if (circle->dataShrinkCircle->shrinkFactor < 1.2f && circle->dataShrinkCircle->shrinkFactor > 1.0f)
+		else if (circle->dataShrinkCircle->shrinkFactor < 1.2f && circle->dataShrinkCircle->shrinkFactor > 1.0f) // success
 		{
-			// success
+			sound_engine->play2D("res/audio/hit_sound/hit_sound_edited.ogg");
 		}
 
 		else if (circle->dataShrinkCircle->shrinkFactor < 1.4f && circle->dataShrinkCircle->shrinkFactor > 1.2f)
 		{
 			score_entity_buffer.push_back(CreateDataTextureScore(circle->dataShrinkCircle->center, SCORE::HUNDRED));
+			sound_engine->play2D("res/audio/hit_sound/hit_sound_edited.ogg");
 		}
 		else if (circle->dataShrinkCircle->shrinkFactor < 1.0f && circle->dataShrinkCircle->shrinkFactor > 0.8f)
 		{
 			score_entity_buffer.push_back(CreateDataTextureScore(circle->dataShrinkCircle->center, SCORE::HUNDRED));
+			sound_engine->play2D("res/audio/hit_sound/hit_sound_edited.ogg");
 		}
 
 		else if (circle->dataShrinkCircle->shrinkFactor < 1.6 && circle->dataShrinkCircle->shrinkFactor > 1.4f)
 		{
 			score_entity_buffer.push_back(CreateDataTextureScore(circle->dataShrinkCircle->center, SCORE::FIFTY));
+			sound_engine->play2D("res/audio/hit_sound/hit_sound_edited.ogg");
 		}
 		else if (circle->dataShrinkCircle->shrinkFactor < 0.8f && circle->dataShrinkCircle->shrinkFactor > 0.6f)
 		{
 			score_entity_buffer.push_back(CreateDataTextureScore(circle->dataShrinkCircle->center, SCORE::FIFTY));
+			sound_engine->play2D("res/audio/hit_sound/hit_sound_edited.ogg");
 		}
 
 		else
 		{
 			score_entity_buffer.push_back(CreateDataTextureScore(circle->dataShrinkCircle->center, SCORE::FAIL));
+			sound_engine->play2D("res/audio/break_sound/break_sound_edited.ogg");
 		}
 	}
 
@@ -785,13 +844,15 @@ void Game::OnEventSlider(Slider*& slider, int key, int action, double x, double 
 	// slider destruction, -1 for x cursor position means slider expired
 	if (slider->dataClickSlidingCircle->repeatCounter > slider->dataSlider->repeat || x == -1)
 	{
-		if (slider->score != SCORE::SUCCESS) // if success, no texture needed
+		if (slider->score != SCORE::SUCCESS)
 		{
 			if (slider->dataSlider->repeat % 2 == 0)
 				score_entity_buffer.push_back(CreateDataTextureScore(slider->dataSlider->endPos, slider->score));
 			else
 				score_entity_buffer.push_back(CreateDataTextureScore(slider->dataSlider->center, slider->score));
 		}
+
+		sound_engine->play2D("res/audio/hit_sound/hit_sound_edited.ogg");
 
 		delete slider->dataSlider;
 		delete slider->dataSlidingCircle;
@@ -800,16 +861,6 @@ void Game::OnEventSlider(Slider*& slider, int key, int action, double x, double 
 		entity_buffer.pop_front();
 		return;
 	}
-
-	// slider shrink/expand on click
-	// to do: add in boundary
-	if (keyHold)
-	{
-		if (slider->dataClickSlidingCircle->scaleFactor < 2.0f)
-			slider->dataClickSlidingCircle->scaleFactor += CIRCLE_SHRINK_SPEED;
-	}
-	else if (slider->dataClickSlidingCircle->scaleFactor > 1.0f)
-		slider->dataClickSlidingCircle->scaleFactor -= CIRCLE_SHRINK_SPEED;
 
 	glBindVertexArray(slider->dataClickSlidingCircle->vao);
 	slider->dataClickSlidingCircle->shader.useProgram();
@@ -834,8 +885,40 @@ void Game::DrawSlider(Slider* slider)
 	slider->dataSlider->shader.useProgram();
 	glDrawElements(GL_TRIANGLES, slider->dataSlider->indices.size(), GL_UNSIGNED_INT, (void*)0);
 
-	
-	// slider destruction, -1 for x cursor position means slider expired
+	// reverse pointer
+	if (slider->dataSlider->repeat)
+	{
+		if (slider->dataClickSlidingCircle->repeatCounter + 2 <= slider->dataSlider->repeat)
+		{
+			glBindVertexArray(slider->dataSlider->dataReverseArrowEnd->vao);
+			slider->dataSlider->dataReverseArrowEnd->shader.useProgram();
+			glBindTexture(GL_TEXTURE_2D, slider->dataSlider->dataReverseArrowEnd->textureID);
+			glDrawElements(GL_TRIANGLES, slider->dataSlider->dataReverseArrowEnd->indices.size(), GL_UNSIGNED_INT, (void*)0);
+
+			glBindVertexArray(slider->dataSlider->dataReverseArrowStart->vao);
+			slider->dataSlider->dataReverseArrowStart->shader.useProgram();
+			glBindTexture(GL_TEXTURE_2D, slider->dataSlider->dataReverseArrowStart->textureID);
+			glDrawElements(GL_TRIANGLES, slider->dataSlider->dataReverseArrowStart->indices.size(), GL_UNSIGNED_INT, (void*)0);
+		}
+		else if (slider->dataSlider->repeat % 2 == 0)
+		{
+			glBindVertexArray(slider->dataSlider->dataReverseArrowStart->vao);
+			slider->dataSlider->dataReverseArrowStart->shader.useProgram();
+			glBindTexture(GL_TEXTURE_2D, slider->dataSlider->dataReverseArrowStart->textureID);
+			glDrawElements(GL_TRIANGLES, slider->dataSlider->dataReverseArrowStart->indices.size(), GL_UNSIGNED_INT, (void*)0);
+		}
+		else if (slider->dataSlider->repeat % 2 != 0)
+		{
+			glBindVertexArray(slider->dataSlider->dataReverseArrowEnd->vao);
+			slider->dataSlider->dataReverseArrowEnd->shader.useProgram();
+			glBindTexture(GL_TEXTURE_2D, slider->dataSlider->dataReverseArrowEnd->textureID);
+			glDrawElements(GL_TRIANGLES, slider->dataSlider->dataReverseArrowEnd->indices.size(), GL_UNSIGNED_INT, (void*)0);
+		}
+	}
+
+
+
+	// slider destruction
 	if (slider->dataClickSlidingCircle->repeatCounter > slider->dataSlider->repeat)
 	{
 		if (slider->score != SCORE::SUCCESS) // if success, no texture needed
@@ -855,25 +938,21 @@ void Game::DrawSlider(Slider* slider)
 	}
 
 	// slider shrink/expand on click
-	// to do: add in boundary
-	if (keyHold)
+	double x, y;
+	glfwGetCursorPos(window, &x, &y);
+	y = SCREEN_HEIGHT - y;
+
+	bool in_circle = y <= sqrt(CIRCLE_RADIUS * CIRCLE_RADIUS - pow(x - (slider->dataSlidingCircle->translateXPos + slider->dataSlidingCircle->center.x), 2)) + (slider->dataSlidingCircle->translateYPos + slider->dataSlidingCircle->center.y) &&
+		y >= (slider->dataSlidingCircle->translateYPos + slider->dataSlidingCircle->center.y) - sqrt(CIRCLE_RADIUS * CIRCLE_RADIUS - pow(x - (slider->dataSlidingCircle->translateXPos + slider->dataSlidingCircle->center.x), 2));
+
+	if (in_circle && keyHold)
 	{
-		if (slider->dataClickSlidingCircle->scaleFactor < 1.75f)
-		{
-			double x, y;
-			glfwGetCursorPos(window, &x, &y);
-			y = SCREEN_HEIGHT - y;
-
-			bool in_circle = y <= sqrt(CIRCLE_RADIUS * CIRCLE_RADIUS - pow(x - (slider->dataSlidingCircle->translateXPos + slider->dataSlidingCircle->center.x), 2)) + (slider->dataSlidingCircle->translateYPos + slider->dataSlidingCircle->center.y) &&
-				y >= (slider->dataSlidingCircle->translateYPos + slider->dataSlidingCircle->center.y) - sqrt(CIRCLE_RADIUS * CIRCLE_RADIUS - pow(x - (slider->dataSlidingCircle->translateXPos + slider->dataSlidingCircle->center.x), 2));
-
-			if (in_circle)
-				slider->dataClickSlidingCircle->scaleFactor += CIRCLE_SHRINK_SPEED;
-			
-		}
+		if (slider->dataClickSlidingCircle->scaleFactor < 1.5f)
+			slider->dataClickSlidingCircle->scaleFactor += CIRCLE_SHRINK_SPEED * 3.0f;
 	}
 	else if (slider->dataClickSlidingCircle->scaleFactor > 1.0f)
 		slider->dataClickSlidingCircle->scaleFactor -= CIRCLE_SHRINK_SPEED;
+
 
 	glBindVertexArray(slider->dataClickSlidingCircle->vao);
 	slider->dataClickSlidingCircle->shader.useProgram();
@@ -893,7 +972,7 @@ void Game::DrawSlider(Slider* slider)
 
 
 	// draw moving base circle
-	if (entity_buffer[0]->type == ENTITY_TYPE::SLIDER) // after the inital circle is finished
+	if (((Slider*)entity_buffer[0])->dataSlider->vao == slider->dataSlider->vao) // after the inital circle is finished; ensures following sliders don't start drawing
 	{
 		// base circle draw
 		glBindVertexArray(slider->dataSlidingCircle->vao);
@@ -938,7 +1017,7 @@ void Game::DrawSlider(Slider* slider)
 					else
 						slider->dataSlidingCircle->translateXPos -= SLIDER_SPEED;
 				}
-				y = slider->dataSlider->slope * slider->dataSlidingCircle->translateXPos;
+				y = slider->dataSlidingCircle->translateYPos = slider->dataSlider->slope * slider->dataSlidingCircle->translateXPos; // edited this
 				x = slider->dataSlidingCircle->translateXPos;
 			}
 
@@ -999,7 +1078,7 @@ void Game::DrawSlider(Slider* slider)
 					else
 						slider->dataClickSlidingCircle->translateXPos -= SLIDER_SPEED;
 				}
-				y = slider->dataSlider->slope * slider->dataClickSlidingCircle->translateXPos;
+				y = slider->dataSlidingCircle->translateYPos = slider->dataSlider->slope * slider->dataSlidingCircle->translateXPos; // edited this
 				x = slider->dataClickSlidingCircle->translateXPos;
 			}
 
@@ -1044,21 +1123,23 @@ void Game::DrawMenu()
 
 	if (on_play && menu->scaleFactor < 1.1f)
 	{
-		menu->scaleFactor += CIRCLE_SHRINK_SPEED * 0.5f;
+		menu->scaleFactor += CIRCLE_SHRINK_SPEED * 4.0f;
 		menu->scaleMatrix = glm::scale(glm::vec3(menu->scaleFactor));
 		glUniformMatrix4fv(menu->scaleMatrixLoc, 1, GL_FALSE, glm::value_ptr(menu->scaleMatrix));
 	}
-	else if (menu->scaleFactor > 1.0f)
+	else if (menu->scaleFactor > 1.0f && !on_play)
 	{
-		menu->scaleFactor -= CIRCLE_SHRINK_SPEED * 0.5f;
+		menu->scaleFactor -= CIRCLE_SHRINK_SPEED * 4.0f;
 		menu->scaleMatrix = glm::scale(glm::vec3(menu->scaleFactor));
 		glUniformMatrix4fv(menu->scaleMatrixLoc, 1, GL_FALSE, glm::value_ptr(menu->scaleMatrix));
 	}
-
-
-
 
 	glDrawElements(GL_TRIANGLES, menu->indices.size(), GL_UNSIGNED_INT, (void*)0);
+
+	glBindVertexArray(menu_logo->vao);
+	menu_logo->shader.useProgram();
+	glBindTexture(GL_TEXTURE_2D, menu_logo->textureID);
+	glDrawElements(GL_TRIANGLES, menu_logo->indices.size(), GL_UNSIGNED_INT, (void*)0);
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -1078,11 +1159,6 @@ void Game::Draw()
 	}
 
 	beatMap->Map();
-
-	if (entity_buffer.size() == 0)
-	{
-		return;
-	}
 
 	for (int i = entity_buffer.size() - 1; i >= 0; i--)
 	{
@@ -1107,6 +1183,10 @@ void Game::Draw()
 
 void Game::OnEvent(int key, int action, double x, double y)
 {
+
+	if (key == GLFW_KEY_ESCAPE)
+		glfwSetWindowShouldClose(window, GLFW_TRUE);
+
 	// menu
 	if (inMenu)
 	{
@@ -1116,8 +1196,8 @@ void Game::OnEvent(int key, int action, double x, double y)
 		if (on_play && action == GLFW_PRESS)
 		{
 			inMenu = false;
-			sound_engine->play2D("res/audio/believer - delay.ogg");
-			beatMap = new BeatMap(this, 124, 4);
+			sound_engine->play2D("res/audio/believer/believer_delay_edited.ogg");
+			beatMap = new BeatMap(this, BPM, BEATS_PER_BAR);
 		}
 		return;
 	}
@@ -1126,8 +1206,15 @@ void Game::OnEvent(int key, int action, double x, double y)
 	else if (key != GLFW_KEY_Z && key != GLFW_KEY_X && key != GLFW_MOUSE_BUTTON_1)
 		return;
 
-	if (action == GLFW_PRESS)
+	if (entity_buffer.size() == 0)
+		return;
+
+	if (action == GLFW_REPEAT)
+		return;
+	else if (action == GLFW_PRESS)
+	{
 		keyHold++;
+	}
 	else if (action == GLFW_RELEASE && keyHold > 0)
 		keyHold--;
 

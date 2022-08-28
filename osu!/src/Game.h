@@ -17,6 +17,21 @@
 #define M_PI 3.14159265358979323846
 #define SCREEN_WIDTH 1920.0f
 #define SCREEN_HEIGHT 1080.0f
+#define SCREEN_CENTER_X SCREEN_WIDTH / 2.0f
+#define SCREEN_CENTER_Y SCREEN_HEIGHT / 2.0f
+#define SCREEN_CENTER SCREEN_CENTER_X, SCREEN_CENTER_Y
+#define SCREEN_CENTER(x, y) SCREEN_CENTER_X + x, SCREEN_CENTER_Y + y
+
+
+
+#ifdef LAPTOP
+#define PLATFORM_SHRINK_SPEED 0.0003f
+#define PLATFORM_SLIDER_SPEED 0.1f
+#else
+#define PLATFORM_SHRINK_SPEED 0.0115f
+#define PLATFORM_SLIDER_SPEED 4.0f
+#endif
+
 
 enum class ENTITY_TYPE
 {
@@ -98,6 +113,9 @@ struct DataSlider : public DataCircle
 	bool useYAxis;
 	bool endIsLeftOfStart;
 	bool endIsUnderStart;
+
+	DataTextureCircle* dataReverseArrowStart;
+	DataTextureCircle* dataReverseArrowEnd;
 };
 
 struct DataMenu : public DataCircle
@@ -144,6 +162,8 @@ private:
 	GLFWwindow* window;
 	irrklang::ISoundEngine* sound_engine;
 	BeatMap* beatMap;
+	const double BPM;
+	const int BEATS_PER_BAR;
 
 	std::deque<Entity*> entity_buffer;
 	std::deque<DataTextureScore*> score_entity_buffer;
@@ -165,11 +185,12 @@ private:
 
 	bool inMenu;
 	DataMenu* menu;
+	DataTextureCircle* menu_logo;
 
 	BasicCircle* CreateBasicCircle(const glm::vec3 center, const int index);
 	DataShrinkCircle* CreateDataShrinkCircle(const glm::vec3 center);
 	DataStaticCircle* CreateDataStaticCircle(const glm::vec3 center);
-	DataTextureCircle* CreateDataTextureCircle(const glm::vec3 center, const int index);
+	DataTextureCircle* CreateDataTextureCircle(const glm::vec3 center, const int index, const glm::vec3 endPos = glm::vec3(-1.0f));
 
 	DataTextureScore* CreateDataTextureScore(const glm::vec3 center, SCORE score);
 
@@ -217,6 +238,8 @@ private:
 
 public:
 	Game(GLFWwindow* win, 
+		const double bpm, 
+		const int beatsPerBar, 
 		const float circleInnerRadius = 20.0f,
 		const float circleRadius = 60.0f,
 		const float circleOuterRadius = 70.0f,
@@ -226,8 +249,8 @@ public:
 		glm::vec4 color_static_circle = glm::vec4(0.8f, 0.5f, 1.0f, 1.0f),
 		glm::vec4 color_center = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f), 
 		const float circle_init_size = 2.5f, 
-		const float circle_shrink_speed = 0.0003f, 
-		const float slider_speed = 0.1f, 
+		const float circle_shrink_speed = PLATFORM_SHRINK_SPEED,
+		const float slider_speed = PLATFORM_SLIDER_SPEED,
 		const int hold = 0, 
 		const bool menu = true);
 	~Game();

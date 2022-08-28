@@ -120,10 +120,11 @@ int main()
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // wire
 
-	Game* game = new Game(window);
-	BeatMap beatMap(game, 124, 4);
+	
 
-	glfwSetWindowUserPointer(window, game); // do research: static cast
+	Game* game = new Game(window, 125, 4);
+
+	glfwSetWindowUserPointer(window, game);
 
 	glfwSetKeyCallback(window, game->KeyboardInput);
 	glfwSetMouseButtonCallback(window, game->MouseInput);
@@ -131,7 +132,7 @@ int main()
 	while (!glfwWindowShouldClose(window))
 	{
 
-		ASSERT(glClearColor(0.2f, 0.2f, 0.2f, 1.0f));
+		ASSERT(glClearColor(0.0f, 0.0f, 0.15f, 1.0f));
 		ASSERT(glClear(GL_COLOR_BUFFER_BIT));
 
 		game->Draw();
@@ -141,6 +142,8 @@ int main()
 		glfwPollEvents();
 
 	}
+
+	delete game;
 
 	glfwTerminate();
 
