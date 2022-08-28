@@ -56,9 +56,7 @@ void BeatMap::CurrentBeat(int& bar, double& beat) const // calculate beat offset
 void BeatMap::Map() // sliders cannot be perfectly vertical; offset ending x coords by at least one
 {
 	int tracker = 0;
-
-	
-
+ 
 	AddEntity(tracker++, 1, 1, ENTITY_TYPE::BASIC, glm::vec3(800.0f, 400.0f, 0.0f), 1);
 	AddEntity(tracker++, 1, 2, ENTITY_TYPE::BASIC, glm::vec3(900.0f, 500.0f, 0.0f), 2);
 	AddEntity(tracker++, 1, 3, ENTITY_TYPE::BASIC, glm::vec3(1000.0f, 400.0f, 0.0f), 3);
@@ -225,6 +223,5 @@ void BeatMap::Map() // sliders cannot be perfectly vertical; offset ending x coo
 
 	AddEntity(tracker++, 43, 1, ENTITY_TYPE::SLIDER, glm::vec3(SCREEN_CENTER(-150.0f, 150.0f), 0.0f), 1, glm::vec3(SCREEN_CENTER(100.0f, -125.0f), 0.0f), 0);
 	AddEntity(tracker++, 44, 1, ENTITY_TYPE::SLIDER, glm::vec3(SCREEN_CENTER(150.0f, 150.0f), 0.0f), 2, glm::vec3(SCREEN_CENTER(-100.0f, -125.0f), 0.0f), 0);
-
 }
 

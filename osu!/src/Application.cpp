@@ -120,6 +120,8 @@ int main()
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // wire
 
+	
+
 	Game* game = new Game(window, 125, 4);
 
 	glfwSetWindowUserPointer(window, game);

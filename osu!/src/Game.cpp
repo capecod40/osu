@@ -42,6 +42,33 @@ Game::Game(GLFWwindow* win,
 	orthoMatrix = glm::ortho(0.0f, 1920.0f, 0.0f, 1080.0f);
 	this->menu = CreateDataMenu();
 	this->menu_logo = CreateDataTextureCircle(glm::vec3(SCREEN_WIDTH / 2.0f, SCREEN_HEIGHT * 0.88f, 0.0f), -1);
+
+	int x, y, n;
+    unsigned char* imageData = stbi_load("res/textures/cursor/cursor.png", &x, &y, &n, 0);
+
+	if (!imageData)
+	{
+		std::cout << "Failed to load cursor image!" << std::endl;
+		__debugbreak();
+	}
+
+	GLFWimage image;
+	image.width = x;
+	image.height = y;
+	image.pixels = imageData;
+
+	GLFWcursor* cursor = glfwCreateCursor(&image, 25, 25);
+
+	if (cursor == NULL)
+	{
+		std::cout << "Failed to load cursor!" << std::endl;
+		__debugbreak();
+	}
+
+	stbi_image_free(imageData);
+
+	glfwSetCursor(window, cursor);
+
 }
 
 Game::~Game()
