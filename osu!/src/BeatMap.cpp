@@ -140,7 +140,7 @@ void BeatMap::Map() // sliders cannot be perfectly vertical; offset ending x coo
 	AddEntity(tracker++, 17, 3, ENTITY_TYPE::BASIC, glm::vec3(SCREEN_CENTER(0.0f, 0.0f), 0.0f), 2);
 
 	AddEntity(tracker++, 18, 3, ENTITY_TYPE::BASIC, glm::vec3(SCREEN_CENTER(-500.0f, 100.0f), 0.0f), 1);
-	AddEntity(tracker++, 18, 4, ENTITY_TYPE::BASIC, glm::vec3(SCREEN_CENTER(-200.0f, 300.0f), 300.0f), 2);
+	AddEntity(tracker++, 18, 4, ENTITY_TYPE::BASIC, glm::vec3(SCREEN_CENTER(-200.0f, 300.0f), 0.0f), 2);
 	AddEntity(tracker++, 19, 1, ENTITY_TYPE::BASIC, glm::vec3(SCREEN_CENTER(200.0f, 300.0f), 0.0f), 3);
 	AddEntity(tracker++, 19, 2, ENTITY_TYPE::BASIC, glm::vec3(SCREEN_CENTER(500.0f, 100.0f), 0.0f), 4);
 
