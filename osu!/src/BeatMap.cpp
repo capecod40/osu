@@ -15,11 +15,12 @@ void BeatMap::AddEntity(int tracker,
 	glm::vec3 endPos /*= glm::vec3(0.0f)*/,
 	int repeat /*= 0*/)
 {
+	int currentBar;
+	double currentBeat;
+	CurrentBeat(currentBar, currentBeat);
+
 	if (entity_tracker == tracker)
 	{
-		int currentBar;
-		double currentBeat;
-		CurrentBeat(currentBar, currentBeat);
 		if (currentBar == bar && (currentBeat >= beat - 0.04 && currentBeat <= beat + 0.04)) // not very accurate
 		{
 			switch (type)
@@ -35,6 +36,13 @@ void BeatMap::AddEntity(int tracker,
 			entity_tracker++;
 		}
 	}
+
+	if (currentBar == 47)
+	{
+		game->inMenu = true;
+		delete this;
+	}
+
 }
 
 void BeatMap::CurrentBeat(int& bar, double& beat) const // calculate beat offset from circle shrink speed
@@ -48,6 +56,8 @@ void BeatMap::CurrentBeat(int& bar, double& beat) const // calculate beat offset
 void BeatMap::Map() // sliders cannot be perfectly vertical; offset ending x coords by at least one
 {
 	int tracker = 0;
+
+	
 
 	AddEntity(tracker++, 1, 1, ENTITY_TYPE::BASIC, glm::vec3(800.0f, 400.0f, 0.0f), 1);
 	AddEntity(tracker++, 1, 2, ENTITY_TYPE::BASIC, glm::vec3(900.0f, 500.0f, 0.0f), 2);
@@ -117,7 +127,7 @@ void BeatMap::Map() // sliders cannot be perfectly vertical; offset ending x coo
 	AddEntity(tracker++, 15, 3, ENTITY_TYPE::SLIDER, glm::vec3(900.0f, 200.0f, 0.0f), 2, glm::vec3(925.0f, 225.0f, 0.0f), 0);
 	AddEntity(tracker++, 15, 4, ENTITY_TYPE::SLIDER, glm::vec3(1100.0f, 200.0f, 0.0f), 3, glm::vec3(1125.0f, 225.0f, 0.0f), 0);
 
-	AddEntity(tracker++, 16, 1, ENTITY_TYPE::BASIC, glm::vec3(1125.0f, 225.0f, 0.0f), 4);
+	//AddEntity(tracker++, 16, 1, ENTITY_TYPE::BASIC, glm::vec3(1125.0f, 225.0f, 0.0f), 4);
 	AddEntity(tracker++, 16, 2, ENTITY_TYPE::BASIC, glm::vec3(800.0f, 500.0f, 0.0f), 1);
 	AddEntity(tracker++, 16, 3, ENTITY_TYPE::BASIC, glm::vec3(1125.0f, 500.0f, 0.0f), 2);
 	AddEntity(tracker++, 16, 4, ENTITY_TYPE::BASIC, glm::vec3(800.0f, 800.0f, 0.0f), 3);
@@ -126,10 +136,10 @@ void BeatMap::Map() // sliders cannot be perfectly vertical; offset ending x coo
 	AddEntity(tracker++, 17, 2, ENTITY_TYPE::BASIC, glm::vec3(SCREEN_CENTER(0.0f, 0.0f), 0.0f), 1);
 	AddEntity(tracker++, 17, 3, ENTITY_TYPE::BASIC, glm::vec3(SCREEN_CENTER(0.0f, 0.0f), 0.0f), 2);
 
-	AddEntity(tracker++, 18, 3, ENTITY_TYPE::BASIC, glm::vec3(200.0f, 200.0f, 0.0f), 1);
-	AddEntity(tracker++, 18, 4, ENTITY_TYPE::BASIC, glm::vec3(600.0f, 400.0f, 0.0f), 2);
-	AddEntity(tracker++, 19, 1, ENTITY_TYPE::BASIC, glm::vec3(1000.0f, 600.0f, 0.0f), 3);
-	AddEntity(tracker++, 19, 2, ENTITY_TYPE::BASIC, glm::vec3(1400.0f, 800.0f, 0.0f), 4);
+	AddEntity(tracker++, 18, 3, ENTITY_TYPE::BASIC, glm::vec3(SCREEN_CENTER(-500.0f, 100.0f), 0.0f), 1);
+	AddEntity(tracker++, 18, 4, ENTITY_TYPE::BASIC, glm::vec3(SCREEN_CENTER(-200.0f, 300.0f), 300.0f), 2);
+	AddEntity(tracker++, 19, 1, ENTITY_TYPE::BASIC, glm::vec3(SCREEN_CENTER(200.0f, 300.0f), 0.0f), 3);
+	AddEntity(tracker++, 19, 2, ENTITY_TYPE::BASIC, glm::vec3(SCREEN_CENTER(500.0f, 100.0f), 0.0f), 4);
 
 	AddEntity(tracker++, 19, 3, ENTITY_TYPE::SLIDER, glm::vec3(SCREEN_CENTER(100.0f, 0.0f), 0.0f), 1, glm::vec3(SCREEN_CENTER(-100.0f, 0.0f), 0.0f), 1);
 
@@ -173,7 +183,7 @@ void BeatMap::Map() // sliders cannot be perfectly vertical; offset ending x coo
 	AddEntity(tracker++, 34, 3, ENTITY_TYPE::BASIC, glm::vec3(SCREEN_CENTER(0.0f, 0.0f), 0.0f), 2);
 
 	// (Be)liever
-	AddEntity(tracker++, 35, 1, ENTITY_TYPE::SLIDER, glm::vec3(SCREEN_CENTER(-40.0f, 0.0f), 0.0f), 1, glm::vec3(SCREEN_CENTER(40.0f, 0.0f), 0.0f), 1);
+	AddEntity(tracker++, 35, 1, ENTITY_TYPE::SLIDER, glm::vec3(SCREEN_CENTER(-40.0f, -200.0f), 0.0f), 1, glm::vec3(SCREEN_CENTER(40.0f, -200.0f), 0.0f), 1);
 	AddEntity(tracker++, 36, 1, ENTITY_TYPE::BASIC, glm::vec3(SCREEN_CENTER(0.0f, 0.0f), 0.0f), 2);
 	AddEntity(tracker++, 36, 4, ENTITY_TYPE::BASIC, glm::vec3(SCREEN_CENTER(0.0f, 0.0f), 0.0f), 1);
 	AddEntity(tracker++, 36, 4.25, ENTITY_TYPE::BASIC, glm::vec3(SCREEN_CENTER(0.0f, 0.0f), 0.0f), 2);

@@ -1160,13 +1160,6 @@ void Game::OnEvent(int key, int action, double x, double y)
 	if (key == GLFW_KEY_ESCAPE)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 
-	// debugging
-	if (key == GLFW_KEY_CAPS_LOCK)
-	{
-		__debugbreak();
-		Draw();
-	}
-
 	// menu
 	if (inMenu)
 	{

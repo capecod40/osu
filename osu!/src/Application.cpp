@@ -141,6 +141,8 @@ int main()
 
 	}
 
+	delete game;
+
 	glfwTerminate();
 
 	return 0;
