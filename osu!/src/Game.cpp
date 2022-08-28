@@ -168,7 +168,7 @@ DataStaticCircle* Game::CreateDataStaticCircle(const glm::vec3 center)
 	return dataStaticCircle;
 }
 
-DataTextureCircle* Game::CreateDataTextureCircle(const glm::vec3 center, const int index)
+DataTextureCircle* Game::CreateDataTextureCircle(const glm::vec3 center, const int index, const glm::vec3 endPos)
 {
 	DataTextureCircle* dataTextureCircle = new DataTextureCircle();
 
@@ -183,8 +183,43 @@ DataTextureCircle* Game::CreateDataTextureCircle(const glm::vec3 center, const i
 
 	if (index == -1) // menu logo
 		GenDataTexture(dataTextureCircle->points, dataTextureCircle->indices, dataTextureCircle->center, SCREEN_HEIGHT * 0.10f, SCREEN_HEIGHT * 0.10f);
+	else if (index == 0) // reverse arrow
+		GenDataTexture(dataTextureCircle->points, dataTextureCircle->indices, glm::vec3(0.0f, 0.0f, 0.0f), 20.0f, 20.0f);
 	else
 		GenDataTexture(dataTextureCircle->points, dataTextureCircle->indices, dataTextureCircle->center, 20.0f, 24.0f);
+
+	if (index == 0) // reverse arrow
+	{
+		bool endIsLeftOfStart = endPos.x < center.x;
+
+		double x = endPos.x - center.x;
+		double y = endPos.y - center.y;
+		double startAngle = atan(y / x);
+
+		if (endIsLeftOfStart)
+			startAngle += M_PI;
+
+		double endAngle = startAngle - M_PI;
+
+		for (int i = 0; i < dataTextureCircle->points.size(); i += 5)
+		{
+			glm::vec4 tmpStart = glm::vec4(dataTextureCircle->points[i],
+				dataTextureCircle->points[i + 1],
+				dataTextureCircle->points[i + 2],
+				1.0f);
+
+			glm::mat4 rotateStart = glm::rotate((float)startAngle, glm::vec3(0.0f, 0.0f, 1.0f));
+
+			glm::mat4 translateStart = glm::translate(center);
+
+
+			tmpStart = translateStart * rotateStart  * tmpStart;
+
+			dataTextureCircle->points[i] = tmpStart.x;
+			dataTextureCircle->points[i + 1] = tmpStart.y;
+			dataTextureCircle->points[i + 2] = tmpStart.z;
+		}
+	}
 	
 	ASSERT(glBufferData(GL_ARRAY_BUFFER, dataTextureCircle->points.size() * sizeof(float), &dataTextureCircle->points[0], GL_STATIC_DRAW));
 	ASSERT(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0));
@@ -208,6 +243,9 @@ DataTextureCircle* Game::CreateDataTextureCircle(const glm::vec3 center, const i
 	{
 		case -1:
 			texturePath = "res/textures/credits/menu_logo.png";
+			break;
+		case 0:
+			texturePath = "res/textures/reverse_arrow/reverse_arrow.png";
 			break;
 		case 1:
 			texturePath = "res/textures/numbers/1.png";
@@ -386,6 +424,10 @@ DataSlider* Game::CreateDataSlider(const glm::vec3 startPos, const glm::vec3 end
 	int uniformLocation = glGetUniformLocation(dataSlider->shader.getProgramID(), "orthoMatrix");
 	glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(orthoMatrix));
 
+	// reverse arrow
+	dataSlider->dataReverseArrowStart = CreateDataTextureCircle(startPos, 0, endPos);
+	dataSlider->dataReverseArrowEnd = CreateDataTextureCircle(endPos, 0, startPos);
+	
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -816,7 +858,39 @@ void Game::DrawSlider(Slider* slider)
 	slider->dataSlider->shader.useProgram();
 	glDrawElements(GL_TRIANGLES, slider->dataSlider->indices.size(), GL_UNSIGNED_INT, (void*)0);
 
-	
+	// reverse pointer
+	if (slider->dataSlider->repeat)
+	{
+		if (slider->dataClickSlidingCircle->repeatCounter + 2 <= slider->dataSlider->repeat)
+		{
+			glBindVertexArray(slider->dataSlider->dataReverseArrowEnd->vao);
+			slider->dataSlider->dataReverseArrowEnd->shader.useProgram();
+			glBindTexture(GL_TEXTURE_2D, slider->dataSlider->dataReverseArrowEnd->textureID);
+			glDrawElements(GL_TRIANGLES, slider->dataSlider->dataReverseArrowEnd->indices.size(), GL_UNSIGNED_INT, (void*)0);
+
+			glBindVertexArray(slider->dataSlider->dataReverseArrowStart->vao);
+			slider->dataSlider->dataReverseArrowStart->shader.useProgram();
+			glBindTexture(GL_TEXTURE_2D, slider->dataSlider->dataReverseArrowStart->textureID);
+			glDrawElements(GL_TRIANGLES, slider->dataSlider->dataReverseArrowStart->indices.size(), GL_UNSIGNED_INT, (void*)0);
+		}
+		else if (slider->dataSlider->repeat % 2 == 0)
+		{
+			glBindVertexArray(slider->dataSlider->dataReverseArrowStart->vao);
+			slider->dataSlider->dataReverseArrowStart->shader.useProgram();
+			glBindTexture(GL_TEXTURE_2D, slider->dataSlider->dataReverseArrowStart->textureID);
+			glDrawElements(GL_TRIANGLES, slider->dataSlider->dataReverseArrowStart->indices.size(), GL_UNSIGNED_INT, (void*)0);
+		}
+		else if (slider->dataSlider->repeat % 2 != 0)
+		{
+			glBindVertexArray(slider->dataSlider->dataReverseArrowEnd->vao);
+			slider->dataSlider->dataReverseArrowEnd->shader.useProgram();
+			glBindTexture(GL_TEXTURE_2D, slider->dataSlider->dataReverseArrowEnd->textureID);
+			glDrawElements(GL_TRIANGLES, slider->dataSlider->dataReverseArrowEnd->indices.size(), GL_UNSIGNED_INT, (void*)0);
+		}
+	}
+
+
+
 	// slider destruction
 	if (slider->dataClickSlidingCircle->repeatCounter > slider->dataSlider->repeat)
 	{

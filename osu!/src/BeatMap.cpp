@@ -49,7 +49,6 @@ void BeatMap::Map() // sliders cannot be perfectly vertical; offset ending x coo
 {
 	int tracker = 0;
 
-
 	AddEntity(tracker++, 1, 1, ENTITY_TYPE::BASIC, glm::vec3(800.0f, 400.0f, 0.0f), 1);
 	AddEntity(tracker++, 1, 2, ENTITY_TYPE::BASIC, glm::vec3(900.0f, 500.0f, 0.0f), 2);
 	AddEntity(tracker++, 1, 3, ENTITY_TYPE::BASIC, glm::vec3(1000.0f, 400.0f, 0.0f), 3);
@@ -97,10 +96,10 @@ void BeatMap::Map() // sliders cannot be perfectly vertical; offset ending x coo
 	AddEntity(tracker++, 10, 4.75, ENTITY_TYPE::BASIC, glm::vec3(800.0f, 450.0f, 0.0f), 1);
 
 	AddEntity(tracker++, 11, 1, ENTITY_TYPE::BASIC, glm::vec3(800.0f, 300.0f, 0.0f), 2);
-	AddEntity(tracker++, 11, 2, ENTITY_TYPE::BASIC, glm::vec3(800.0f, 700.0f, 0.0f), 3);
-	AddEntity(tracker++, 11, 3, ENTITY_TYPE::BASIC, glm::vec3(1000.0f, 700.0f, 0.0f), 1);
-	AddEntity(tracker++, 11, 4, ENTITY_TYPE::BASIC, glm::vec3(1200.0f, 700.0f, 0.0f), 2);
-	AddEntity(tracker++, 12, 1, ENTITY_TYPE::BASIC, glm::vec3(SCREEN_CENTER(0.0f, 0.0f), 0.0f), 3);
+	AddEntity(tracker++, 11, 2, ENTITY_TYPE::BASIC, glm::vec3(800.0f, 700.0f, 0.0f), 1);
+	AddEntity(tracker++, 11, 3, ENTITY_TYPE::BASIC, glm::vec3(1000.0f, 700.0f, 0.0f), 2);
+	AddEntity(tracker++, 11, 4, ENTITY_TYPE::BASIC, glm::vec3(1200.0f, 700.0f, 0.0f), 3);
+	AddEntity(tracker++, 12, 1, ENTITY_TYPE::BASIC, glm::vec3(SCREEN_CENTER(0.0f, 0.0f), 0.0f), 4);
 
 
 	// Second things second

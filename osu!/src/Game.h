@@ -113,6 +113,9 @@ struct DataSlider : public DataCircle
 	bool useYAxis;
 	bool endIsLeftOfStart;
 	bool endIsUnderStart;
+
+	DataTextureCircle* dataReverseArrowStart;
+	DataTextureCircle* dataReverseArrowEnd;
 };
 
 struct DataMenu : public DataCircle
@@ -187,7 +190,7 @@ private:
 	BasicCircle* CreateBasicCircle(const glm::vec3 center, const int index);
 	DataShrinkCircle* CreateDataShrinkCircle(const glm::vec3 center);
 	DataStaticCircle* CreateDataStaticCircle(const glm::vec3 center);
-	DataTextureCircle* CreateDataTextureCircle(const glm::vec3 center, const int index);
+	DataTextureCircle* CreateDataTextureCircle(const glm::vec3 center, const int index, const glm::vec3 endPos = glm::vec3(-1.0f));
 
 	DataTextureScore* CreateDataTextureScore(const glm::vec3 center, SCORE score);
 
