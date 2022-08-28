@@ -181,10 +181,10 @@ DataTextureCircle* Game::CreateDataTextureCircle(const glm::vec3 center, const i
 	dataTextureCircle->index = index;
 	dataTextureCircle->center = center;
 
-	if (index == -1)
+	if (index == -1) // menu logo
 		GenDataTexture(dataTextureCircle->points, dataTextureCircle->indices, dataTextureCircle->center, SCREEN_HEIGHT * 0.10f, SCREEN_HEIGHT * 0.10f);
 	else
-		GenDataTexture(dataTextureCircle->points, dataTextureCircle->indices, dataTextureCircle->center /* default texture dimensions */);
+		GenDataTexture(dataTextureCircle->points, dataTextureCircle->indices, dataTextureCircle->center, 20.0f, 24.0f);
 	
 	ASSERT(glBufferData(GL_ARRAY_BUFFER, dataTextureCircle->points.size() * sizeof(float), &dataTextureCircle->points[0], GL_STATIC_DRAW));
 	ASSERT(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0));
@@ -260,7 +260,10 @@ DataTextureScore* Game::CreateDataTextureScore(const glm::vec3 center, SCORE sco
 	glBindBuffer(GL_ARRAY_BUFFER, dataTextureScore->vbo);
 
 	dataTextureScore->center = center;
-	GenDataTexture(dataTextureScore->points, dataTextureScore->indices, center, 20.0f, 10.0f);
+	if (score == SCORE::HUNDRED)
+		GenDataTexture(dataTextureScore->points, dataTextureScore->indices, center, 30.0f, 25.0f);
+	else
+		GenDataTexture(dataTextureScore->points, dataTextureScore->indices, center, 25.0f, 25.0f);
 
 	glBufferData(GL_ARRAY_BUFFER, dataTextureScore->points.size() * sizeof(float), &dataTextureScore->points[0], GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
@@ -834,23 +837,21 @@ void Game::DrawSlider(Slider* slider)
 	}
 
 	// slider shrink/expand on click
-	if (keyHold)
+	double x, y;
+	glfwGetCursorPos(window, &x, &y);
+	y = SCREEN_HEIGHT - y;
+
+	bool in_circle = y <= sqrt(CIRCLE_RADIUS * CIRCLE_RADIUS - pow(x - (slider->dataSlidingCircle->translateXPos + slider->dataSlidingCircle->center.x), 2)) + (slider->dataSlidingCircle->translateYPos + slider->dataSlidingCircle->center.y) &&
+		y >= (slider->dataSlidingCircle->translateYPos + slider->dataSlidingCircle->center.y) - sqrt(CIRCLE_RADIUS * CIRCLE_RADIUS - pow(x - (slider->dataSlidingCircle->translateXPos + slider->dataSlidingCircle->center.x), 2));
+
+	if (in_circle && keyHold)
 	{
 		if (slider->dataClickSlidingCircle->scaleFactor < 1.5f)
-		{
-			double x, y;
-			glfwGetCursorPos(window, &x, &y);
-			y = SCREEN_HEIGHT - y;
-
-			bool in_circle = y <= sqrt(CIRCLE_RADIUS * CIRCLE_RADIUS - pow(x - (slider->dataSlidingCircle->translateXPos + slider->dataSlidingCircle->center.x), 2)) + (slider->dataSlidingCircle->translateYPos + slider->dataSlidingCircle->center.y) &&
-				y >= (slider->dataSlidingCircle->translateYPos + slider->dataSlidingCircle->center.y) - sqrt(CIRCLE_RADIUS * CIRCLE_RADIUS - pow(x - (slider->dataSlidingCircle->translateXPos + slider->dataSlidingCircle->center.x), 2));
-
-			if (in_circle)
-				slider->dataClickSlidingCircle->scaleFactor += CIRCLE_SHRINK_SPEED * 3.0f;
-		}
+			slider->dataClickSlidingCircle->scaleFactor += CIRCLE_SHRINK_SPEED * 3.0f;
 	}
 	else if (slider->dataClickSlidingCircle->scaleFactor > 1.0f)
 		slider->dataClickSlidingCircle->scaleFactor -= CIRCLE_SHRINK_SPEED;
+
 
 	glBindVertexArray(slider->dataClickSlidingCircle->vao);
 	slider->dataClickSlidingCircle->shader.useProgram();
@@ -915,7 +916,7 @@ void Game::DrawSlider(Slider* slider)
 					else
 						slider->dataSlidingCircle->translateXPos -= SLIDER_SPEED;
 				}
-				y = slider->dataSlider->slope * slider->dataSlidingCircle->translateXPos;
+				y = slider->dataSlidingCircle->translateYPos = slider->dataSlider->slope * slider->dataSlidingCircle->translateXPos; // edited this
 				x = slider->dataSlidingCircle->translateXPos;
 			}
 
@@ -976,7 +977,7 @@ void Game::DrawSlider(Slider* slider)
 					else
 						slider->dataClickSlidingCircle->translateXPos -= SLIDER_SPEED;
 				}
-				y = slider->dataSlider->slope * slider->dataClickSlidingCircle->translateXPos;
+				y = slider->dataSlidingCircle->translateYPos = slider->dataSlider->slope * slider->dataSlidingCircle->translateXPos; // edited this
 				x = slider->dataClickSlidingCircle->translateXPos;
 			}
 
@@ -1084,6 +1085,13 @@ void Game::OnEvent(int key, int action, double x, double y)
 
 	if (key == GLFW_KEY_ESCAPE)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
+
+	// debugging
+	if (key == GLFW_KEY_CAPS_LOCK)
+	{
+		__debugbreak();
+		Draw();
+	}
 
 	// menu
 	if (inMenu)
