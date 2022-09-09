@@ -6,14 +6,11 @@ From Wikipedia:
   https://en.wikipedia.org/wiki/Osu!
  
 Libraries used: 
-  GLAD
-    OpenGL loading library
-  GLFW 
-    Window creation and OpenGL context
-  GLM
-    Math library
-  irrKlang
-    Audio library
+
+  GLAD: OpenGL loading library
+  GLFW: Window creation and OpenGL context
+  GLM: Math library
+  irrKlang: Audio library
     
 Developed using Visual Studio on Windows 10
 
