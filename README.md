@@ -4,7 +4,7 @@ Replica of *osu!* using OpenGL 4.3
 
 Demo Video: https://youtu.be/APgGz106lYs
 
-![image](https://github.com/capecod40/osu/assets/109251338/88b290f2-d6cf-47f1-a859-516c9dbc4e7e)
+![image](https://github.com/capecod40/osu/assets/109251338/4870dd40-da5e-4311-85b5-b668e4f6d56e)
 
 From Wikipedia (https://en.wikipedia.org/wiki/Osu!):  
 Osu! is a free-to-play rhythm game primarily developed, published, and created by Dean "peppy" Herbert.  
